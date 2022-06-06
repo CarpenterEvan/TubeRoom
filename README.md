@@ -1,9 +1,9 @@
 # TubeRoom
 Code that I use for work
-'''
+
     I want to scan a tube ID from the Database file, and check if it is good or bad. 
     I will be doing this for thousands of tubes, so I want it to be quick, easy, and compact. 
-    99 percent of the time, I will be scanning 10 tubes at a time, very fast, then checking if those 10 pass
+    99 percent of the time, I will be scanning 10 tubes at a time, very fast, then checking if those 10 pass.
     I made this with the intention of running it from my mac console.
 
     The following text describes the code, use it as a reference, not a book!!
@@ -41,4 +41,4 @@ Code that I use for work
         You can comment out this line and run the code to see what I mean
 
         Then I have the code print all of the extracted, colored values
-'''
+
