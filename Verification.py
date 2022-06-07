@@ -46,12 +46,11 @@ The following text describes the code, use it as a reference, not a book!!
  1) ###########################################################################################
 '''
 import pandas as pd
-import datetime
+from datetime import datetime, timedelta
 
 df = pd.read_csv("./Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt", 
                  names = ["ID", "T1", "T2", "DC", "Fin"],  
                  delimiter = "|")
-
 
 '''
  2) ###########################################################################################
@@ -67,7 +66,6 @@ df["T2"] = df["T2"].str.strip().str.split(" ") # [dF, "", "", dT, "", Dt, Pass/P
 df["DC"] = df["DC"].str.strip().str.split(" ") # [Date, CAEN/UM, "", "", DC, seconds on HV, OK/WARN/BAD]
 df["Fin"] = df["Fin"].str.strip().str.split(" ") # [Date, "", done?, YES/NO, comments could make this length change]
 df = df[["justID", "ID", "T1", "T2", "DC", "Fin"]]
-
 '''
  4) ###########################################################################################
 '''
@@ -75,7 +73,7 @@ tube = "MSU00000" # Initialize variable with format of ID
 counter = 0
 
 green_text = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
-red_text = lambda x: f"\x1b[31m{x}\x1b[0m"
+red_text   = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red = lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
 find = lambda x: x.loc[ tuberow[0] ] # find(x) gives dataframe row, do find(df["ID"]) to test
@@ -88,7 +86,6 @@ while True: # For quick testing, use the for loop, and comment out the input and
         tubeID = input("Tube ID: ")
         tuberow = df.index[ df["justID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
         counter = counter + 1 if counter <=9 else 1
-
         '''
         6) ###########################################################################################
         '''
@@ -101,7 +98,7 @@ while True: # For quick testing, use the for loop, and comment out the input and
             T1_date = "11-11-11"
             T1_tension = 0.
 
-        T1_datetime = datetime.datetime.strptime(T1_date, "%y-%m-%d")
+        T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
 
         try:
             T2_tension_delta = float(find(df["T2"])[-4])
@@ -110,20 +107,16 @@ while True: # For quick testing, use the for loop, and comment out the input and
             T2_tension_delta =  -T1_tension
             T2_time_delta_string = int(0)
 
-        T2_time_delta = datetime.timedelta(days = T2_time_delta_string)
-        T2_date = datetime.datetime.strftime(T1_datetime + T2_time_delta, "%y-%m-%d")
+        T2_time_delta = timedelta(days = T2_time_delta_string)
+        T2_date = datetime.strftime(T1_datetime + T2_time_delta, "%y-%m-%d") if T2_time_delta > timedelta(days=0) else 0
         T2_tension = round(T1_tension + T2_tension_delta , 3)
 
-
         DC_date = find(df["DC"])[0]
-
         Bend_pass_string = find(df["ID"])[-1]
         T1_pass_string = find(df["T1"])[-2]
         T2_pass_string = find(df["T2"])[-1]
         DC_pass_string = find(df["DC"])[-1]
-        
         Final_pass_string = find(df["Fin"])[3]
-
         '''
         7) ###########################################################################################
         '''
@@ -132,7 +125,6 @@ while True: # For quick testing, use the for loop, and comment out the input and
         T2_pass = green_text(T2_pass_string) if "Pass" in T2_pass_string else red_text(T2_pass_string)
         DC_pass = green_text(DC_pass_string) if (DC_pass_string == "OK") else red_text(DC_pass_string)
         Final_pass = green_text(Final_pass_string) if (Final_pass_string == "YES") else red_text("NO")
-
         '''
         8) ###########################################################################################
         '''
@@ -140,13 +132,14 @@ while True: # For quick testing, use the for loop, and comment out the input and
                       f"{shipment_date: <10}",
                       f"Bend: {Bend_pass: <12}",
                       f"T1 on {T1_date} {T1_pass: <12} {T1_tension: <7}",
-                      f"T2 on {T2_date} {T2_pass: <15} {T2_tension: <7}",
+                      f"T2 on {T2_date: <8} {T2_pass: <15} {T2_tension: <7}",
                       f"DC on {DC_date} {DC_pass: ^13}",
                       f"Final: {Final_pass: ^12}",
                       f"{counter: >2}"]
 
         print("", end="\033[1A \033[1D") # Comment out this line to see what I was talking about ^^
         print(" | ".join(print_list))
+
     except IndexError:
         print("", end="\033[1A \033[1D")
         print("All done! :) Or ID does not exist :( ")

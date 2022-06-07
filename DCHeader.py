@@ -19,14 +19,14 @@ The following text describes the code, use it as a reference, not a book!!
 
 from os.path import exists
 from sys import exit
-import datetime
+from datetime import date, datetime
 '''
 1) ###########################################################################################
 '''
-year = datetime.date.today().strftime("%Y")
-month = datetime.date.today().strftime("%m")
-day = datetime.date.today().strftime("%d")
-time = datetime.datetime.now().strftime("%H:%M:%S")
+year = date.today().strftime("%Y")
+month = date.today().strftime("%m")
+day = date.today().strftime("%d")
+time = datetime.now().strftime("%H:%M:%S")
 in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I also need to name the file.
 
 '''
@@ -67,12 +67,11 @@ print(DC_tube_IDs)
 '''
 
 finish = input("Finish? [y/n]:")
+
 if finish == "y":
     pass
-elif finish == "n":
+elif finish != "y":
     exit()
-elif (finish != "y") and (finish != "n"):
-    exit() 
 
 '''
 4) ###########################################################################################
