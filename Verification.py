@@ -1,10 +1,54 @@
-''' Check the Readme for the description of numbers
+'''
+The following text describes the code, use it as a reference, not a book!!
+    1)  I use pandas to open the database as a csv, and rename the columns to have shorter names
+        Now the dataframe is created and there is a long string in each cell
+
+    2)  I strip the whitespace and split the ID column to extract just the tube IDs from the long string
+        I then put this ID into a new column called justID.
+
+    3)  I strip the whitespace from every cell, then split each cell into a list with " " as a delimiter
+        this means some entries in the list are "", but I don't care enough about those to try and filter them out.
+        I re-order the dataframe columns so justID is on the left. This does not serve any purpose now, but it was 
+        nicer to display the dataframe this way when I was setting up the code :)
+
+    4)  I initialize two variables, tubeID and counter, tubeID will be the string that is input and searched for. 
+        I set up counter so that when I scan tubes, I can easily see that the fourth and seventh tubes are bad, for example.
+        I define some lambda functions just to reduce clutter, they take in a string and use the ANSI escape codes to color the text displayed. 
+        The last lambda function (find) is for searching the dataframe for the index of the row with the tube ID
+
+    5)  This is the while loop, it will continuously take in an input, and try to find it in the justID column, 
+        if the input string is not in the column, it should pass an index error, which will be caught by the except case, 
+        this is the best way to stop the code (by typing "stop" for example)
+
+    6)  After finding the ID, the code takes out the relevant data from the lists in the row, 
+        I only care about the date the test happened, the tension values, and if it passed. 
+        I do some datetime formatting, the second tension test is recorded in terms of changes, delta tension, 
+        the number of days since the first tension test, etc, so I need to do a datetime difference
+
+    7)  Check if the pass/fail strings say pass or fail, "pass" is written differently for each test
+        The string is color coded green or red if it is true (matches the pass) or false
+        instead of trying to figure out all of the false cases, it just returns whatever the string is if it is not pass, and colors it red
+
+    8)  To make the output more compact, I use ANSI escape characters to move the command line cursor up one line, 
+        and re-write over the input dialogue. 
+        You can comment out this line and run the code to see what I mean
+
+        Then I have the code print all of the extracted, colored values
+    
+    Possible Errors: 
+    The T2 Date is before the Shipment Date???
+        T2 updates to 0 if it doesn't exist, and T1 is usually done at MSU before it is shipped.
+    All tests are green but Final still says no???
+        The tube is probably too long or too short
+'''
+
+''' You'll need to have google drive desktop installed
  1) ###########################################################################################
 '''
 import pandas as pd
 import datetime
 
-df = pd.read_csv("./Desktop/TUBEDB.txt", 
+df = pd.read_csv("./Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt", 
                  names = ["ID", "T1", "T2", "DC", "Fin"],  
                  delimiter = "|")
 
@@ -92,9 +136,18 @@ while True: # For quick testing, use the for loop, and comment out the input and
         '''
         8) ###########################################################################################
         '''
+        print_list = [f"{tubeID: ^7}", 
+                      f"{shipment_date: <10}",
+                      f"Bend: {Bend_pass: <12}",
+                      f"T1 on {T1_date} {T1_pass: <12} {T1_tension: <7}",
+                      f"T2 on {T2_date} {T2_pass: <15} {T2_tension: <7}",
+                      f"DC on {DC_date} {DC_pass: ^13}",
+                      f"Final: {Final_pass: ^12}",
+                      f"{counter: >2}"]
+
         print("", end="\033[1A \033[1D") # Comment out this line to see what I was talking about ^^
-        print(f"{tubeID: ^7} | {shipment_date: <10} | Bend: {Bend_pass: <12} | T1 on {T1_date} {T1_pass: <12} {T1_tension: <7} | T2 on {T2_date} {T2_pass: <15} {T2_tension: <7} | DC on {DC_date} {DC_pass: ^13} | Final: {Final_pass: ^12} | {counter: >2}")
+        print(" | ".join(print_list))
     except IndexError:
         print("", end="\033[1A \033[1D")
-        print("All done! :) ")
+        print("All done! :) Or ID does not exist :( ")
         break
