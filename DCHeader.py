@@ -83,7 +83,11 @@ with open("./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/_CAENPS_2
         Output.write(lines[0])
         Output.write(lines[1].replace("Evan", f"{operator}"))
         Output.write(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
-        Output.writelines(lines[3:13])
-        Output.write(lines[14][0:15]+ DC_tube_IDs + "\n")
+        Output.writelines(lines[3:14])
+        Output.write(lines[14][0:16]+ DC_tube_IDs + "\n")
         Output.write(lines[15])
+'''
+with open("./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/_CAENPS_2022MMDD_template.log", 'r') as Template:
+    for i in enumerate(Template.readlines()):
+        print(i)'''
 print("All Done! :)")

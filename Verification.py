@@ -14,11 +14,14 @@ The following text describes the code, use it as a reference, not a book!!
     4)  I initialize two variables, tubeID and counter, tubeID will be the string that is input and searched for. 
         I set up counter so that when I scan tubes, I can easily see that the fourth and seventh tubes are bad, for example.
         I define some lambda functions just to reduce clutter, they take in a string and use the ANSI escape codes to color the text displayed. 
-        The last lambda function (find) is for searching the dataframe for the index of the row with the tube ID
+        The last lambda function (find) is for searching the dataframe for the index of the row with the tube ID  
 
     5)  This is the while loop, it will continuously take in an input, and try to find it in the justID column, 
         if the input string is not in the column, it should pass an index error, which will be caught by the except case, 
         this is the best way to stop the code (by typing "stop" for example)
+        I'm sure this whole code could be changed around so that the dataframe is pre-formatted to have the
+        correct colors and list components, reducing the formatting code in the while loop. While that would probably be "faster" for scanning, the printing is already so imperceivably fast as it is, I think it's fine. Also, formatting the entire dataframe each time would likely just slow down the initialization
+        (Although most likely even that "slow down" would also be imperceivable).
 
     6)  After finding the ID, the code takes out the relevant data from the lists in the row, 
         I only care about the date the test happened, the tension values, and if it passed. 
