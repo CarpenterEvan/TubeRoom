@@ -87,8 +87,12 @@ while True: # For quick testing, use the for loop, and comment out the input and
 #for tubeID in ["MSU05123", "MSU00220"]:  #MSU05123 passes everything, MSU0220 fails all except bend test 
     try:
         tubeID = input("Tube ID: ")
+        if tubeID=="stop":
+            print("All done! :)")
+            break
         tuberow = df.index[ df["justID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
         counter = counter + 1 if counter <=9 else 1
+        counter = counter if tubeID != "" else 0
         '''
         6) ###########################################################################################
         '''
@@ -97,9 +101,11 @@ while True: # For quick testing, use the for loop, and comment out the input and
         try:
             T1_date = find(df["T1"])[0]
             T1_tension = float(find(df["T1"])[3])
+            T1_length = float(find(df["T1"])[1])
         except ValueError: 
             T1_date = "11-11-11"
             T1_tension = 0.
+            T1_length = 0.
 
         T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
 
@@ -134,16 +140,15 @@ while True: # For quick testing, use the for loop, and comment out the input and
         print_list = [f"{tubeID: ^7}", 
                       f"{shipment_date: <10}",
                       f"Bend: {Bend_pass: <12}",
-                      f"T1 on {T1_date} {T1_pass: <12} {T1_tension: <7}",
+                      f"T1 on {T1_date} {T1_pass: <12} {T1_tension: <7} {T1_length : <7}",
                       f"T2 on {T2_date: <8} {T2_pass: <15} {T2_tension: <7}",
                       f"DC on {DC_date} {DC_pass: ^13}",
                       f"Final: {Final_pass: ^12}",
-                      f"{counter: >2}"]
+                      f"{counter: >2}"] 
 
         print("", end="\033[1A \033[1D") # Comment out this line to see what I was talking about ^^
-        print(" | ".join(print_list))
+        print(" | ".join(print_list)) if counter !=0 else print("Tube ID") # I can't believe this line works
 
     except IndexError:
         print("", end="\033[1A \033[1D")
-        print("All done! :) Or ID does not exist :( ")
-        break
+        print(f"The ID '{tubeID}' either does not exist or is not in the database yet :( ")

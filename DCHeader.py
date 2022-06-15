@@ -32,41 +32,52 @@ in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I 
 '''
 2) ###########################################################################################
 '''
+
 file_exists = exists(f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test.log")
 if file_exists==False:
     processed_file_exists = exists(f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test.log")
-    file_exists = True if processed_file_exists == True else False
+    file_exists = processed_file_exists # True or False
 
-test_number = "2" if file_exists == True else ""
+try: 
+    test_number = int(input("Test Number?: ")) if file_exists else ""
+except ValueError:
+    print(" \n\n Test Number must be a number, it is the number at end of the .log file \n '..._test\x1b[32m2\x1b[0m.log' for example \n\n ")
+    exit() 
+
+# \x1b[32m;5m this text is green \x1b[0m
 file_name = f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test{test_number}.log"
-print(file_name)
-print(time) 
+print(f"\nFile Name: \x1b[32mCAENPS_{year}{month}{day}_test{test_number}.log\x1b[0m")
+
 operator = input("Operator: ")
 if operator == "stop":
     exit()
+
+print(f"Time:     {time}")
 '''
 3) ###########################################################################################
 '''
-
 counter = 0
-DC_tube_IDs = " "
+DC_tube_IDs = []
+ID_set = set()
 while True:
     board_number = 4 if counter <= 23 else 1 
     this_tube = input(f"Board {board_number} Position {counter % 24}: ")
 
-    if this_tube != "stop":
-        DC_tube_IDs += (this_tube) + " "  
     if this_tube == "stop":
         break
-    counter += 1
+    if this_tube not in ID_set:
+        ID_set.add(this_tube)
+        DC_tube_IDs.append(this_tube)
+    counter +=  1
 
 print(DC_tube_IDs)
-
+print(len(DC_tube_IDs))
+ID_string = " ".join(DC_tube_IDs)
 '''
 4) ###########################################################################################
 '''
 
-finish = input("Finish? [y/n]:")
+finish = input("Finish? [y/n]: ")
 
 if finish == "y":
     pass
@@ -84,10 +95,7 @@ with open("./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/_CAENPS_2
         Output.write(lines[1].replace("Evan", f"{operator}"))
         Output.write(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
         Output.writelines(lines[3:14])
-        Output.write(lines[14][0:16]+ DC_tube_IDs + "\n")
+        Output.write(lines[14][0:16]+ ID_string + "\n")
         Output.write(lines[15])
-'''
-with open("./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/_CAENPS_2022MMDD_template.log", 'r') as Template:
-    for i in enumerate(Template.readlines()):
-        print(i)'''
-print("All Done! :)")
+
+print("\n\n All Done! :) \n\n")
