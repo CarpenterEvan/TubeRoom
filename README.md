@@ -12,3 +12,5 @@ This was originally on a Google Colab file, but it is often far too slow when ta
         I want to create a new .log file that will be synced with the google drive. It must be labeled with the correct date, 
         and if a file already already exists for that day, it will have to modify the name. This code can only handle 2 tests/day right now. 
         The other important feature is scanning in the tube IDs. 
+    FullSearch:
+        A WIP, I want to be able to enter a tube's ID and search through all testing files to find what test files it's apart of. 
