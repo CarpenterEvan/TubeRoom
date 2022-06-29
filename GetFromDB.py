@@ -1,7 +1,19 @@
 from os import lstat
 import pandas as pd
 from datetime import datetime, timedelta
-import logging
+
+global ID, T1, T2, DC, FV
+green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
+#white_text  = lambda x: f""
+red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
+flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
+
+def color_pass_string(string, flag):
+    if flag:
+        return green_text(string)  
+    elif not flag: 
+        return red_text(string)
+
 def Format_Database():
     path = "./Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt"
     df = pd.read_csv(path, 
@@ -17,19 +29,14 @@ def Format_Database():
     FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment",   "None", "None"])
     return ID, T1, T2, DC, FV
 
-global ID, T1, T2, DC, FV
 ID, T1, T2, DC, FV = Format_Database()
-green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
-#white_text  = lambda x: f""
-red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
-flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
 
 def Get_Tube_Info(input_tubeID:str):
     try:
         tubeID = input_tubeID
         if len(tubeID) == 0:
-            return "-"*166
+            return ("-"*166, False)
         tuberow, = ID.index[ ID["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
         # tuberow, unpacks just the first value of the tuple into the variable tuberow
 
@@ -78,25 +85,31 @@ def Get_Tube_Info(input_tubeID:str):
         DC_pass_string = DC["flag"].iloc[ tuberow ]
         Final_pass_string = FV["ok"].iloc[ tuberow ]
 
-        Bend_pass = green_text(Bend_pass_string) if (Bend_pass_string == "PASS") else red_text(Bend_pass_string)
-        T1_pass = green_text(T1_pass_string) if "pass" in T1_pass_string else red_text(T1_pass_string)
-        T2_pass = green_text(T2_pass_string) if "Pass" in T2_pass_string else red_text(T2_pass_string)
-        DC_pass = green_text(DC_pass_string) if (DC_pass_string == "OK") and (DC_hours>5) else red_text(DC_pass_string)
-        Final_pass = green_text(Final_pass_string) if (Final_pass_string == "YES") else red_text("NO")
-        good_tube = True if (Final_pass_string == "YES") else False
+        Bend_flag = (Bend_pass_string == "PASS")
+        T1_flag =  ("pass" in T1_pass_string)
+        T2_flag = ("Pass" in T2_pass_string)
+        DC_flag = (DC_pass_string == "OK") and (DC_hours>5)
+
+        good_tube = Bend_flag and T1_flag and T2_flag and DC_flag and (Final_pass_string == "YES") 
+        
+        Bend_pass = color_pass_string(Bend_pass_string, Bend_flag) 
+        T1_pass = color_pass_string(T1_pass_string, T1_flag) 
+        T2_pass = color_pass_string(T2_pass_string, T2_flag)
+        DC_pass = color_pass_string(DC_pass_string, DC_flag)
+        Final_pass = green_text(Final_pass_string) if good_tube else red_text("NO")
 
         print_list = [f"{tubeID: ^7}", 
-                    f"{shipment_date: <10}",
-                    f"Bend: {Bend_pass: <12}",
-                    f"T1 on {T1_date} {T1_pass: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
-                    f"T2 on {T2_date: <8} {T2_pass: <15} {T2_tension:0<7}g",
-                    f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_pass: >13}",
-                    f"Final: {Final_pass: <12}"] 
+                      f"{shipment_date: <10}",
+                      f"Bend: {Bend_pass: <12}",
+                      f"T1 on {T1_date} {T1_pass: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
+                      f"T2 on {T2_date: <8} {T2_pass: <15} {T2_tension:0<7}g",
+                      f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_pass: >13}",
+                      f"Final: {Final_pass: <12}"] 
 
             # Comment out this line to see what I was talking about ^^
         final_string = " | ".join(print_list)
 
-        return final_string
+        return final_string, good_tube
 
     except ValueError:
-        return f"The ID '{tubeID}' either does not exist or is not in the database yet :( "
+        return f"The ID '{tubeID}' either does not exist or is not in the database yet :( ", False

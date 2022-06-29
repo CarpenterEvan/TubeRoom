@@ -3,8 +3,10 @@ from Verification import ID
 import datetime
 d = {}
 s = set()
+
 while True:
     tubeid = input("Scan: ")
+    print(tubeid)
     if tubeid=="stop":
         for i in d:
             print(i, d[i])
