@@ -61,7 +61,7 @@ DC_tube_IDs = []
 ID_set = set()
 while True:
     board_number = 4 if counter <= 23 else 1 
-    this_tube = input(f"Board {board_number} Position {counter % 24}: ")
+    this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
 
     if this_tube == "stop":
         break

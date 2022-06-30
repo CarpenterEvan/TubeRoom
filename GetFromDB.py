@@ -92,7 +92,7 @@ def Get_Tube_Info(input_tubeID:str):
         good_tube:bool = all( (Bend_flag,
                           T1_flag, 
                           T2_flag, 
-                          DC_flag, 
+                          DC_flag,
                           (Final_pass_string == "YES")) )
 
         if good_tube:
