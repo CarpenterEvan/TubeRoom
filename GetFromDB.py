@@ -1,4 +1,3 @@
-from os import lstat
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -88,17 +87,28 @@ def Get_Tube_Info(input_tubeID:str):
         Bend_flag = (Bend_pass_string == "PASS")
         T1_flag =  ("pass" in T1_pass_string)
         T2_flag = ("Pass" in T2_pass_string)
-        DC_flag = (DC_pass_string == "OK") and (DC_hours>5)
-
-        good_tube = Bend_flag and T1_flag and T2_flag and DC_flag and (Final_pass_string == "YES") 
+        DC_flag = (DC_pass_string == "OK") and (DC_hours>=4)
         
-        Bend_pass = color_pass_string(Bend_pass_string, Bend_flag) 
-        T1_pass = color_pass_string(T1_pass_string, T1_flag) 
-        T2_pass = color_pass_string(T2_pass_string, T2_flag)
-        DC_pass = color_pass_string(DC_pass_string, DC_flag)
-        Final_pass = green_text(Final_pass_string) if good_tube else red_text("NO")
+        good_tube:bool = all( (Bend_flag,
+                          T1_flag, 
+                          T2_flag, 
+                          DC_flag, 
+                          (Final_pass_string == "YES")) )
 
-        print_list = [f"{tubeID: ^7}", 
+        if good_tube:
+            Bend_pass = green_text(Bend_pass_string)
+            T1_pass = green_text(T1_pass_string)
+            T2_pass = green_text(T2_pass_string)
+            DC_pass = green_text(DC_pass_string)
+            Final_pass = green_text(Final_pass_string)
+        else:
+            Bend_pass = color_pass_string(Bend_pass_string, Bend_flag) 
+            T1_pass = color_pass_string(T1_pass_string, T1_flag) 
+            T2_pass = color_pass_string(T2_pass_string, T2_flag)
+            DC_pass = color_pass_string(DC_pass_string, DC_flag)
+            Final_pass = color_pass_string(Final_pass_string, good_tube)
+
+        print_list:list = [f"{tubeID: ^7}", 
                       f"{shipment_date: <10}",
                       f"Bend: {Bend_pass: <12}",
                       f"T1 on {T1_date} {T1_pass: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
@@ -107,7 +117,7 @@ def Get_Tube_Info(input_tubeID:str):
                       f"Final: {Final_pass: <12}"] 
 
             # Comment out this line to see what I was talking about ^^
-        final_string = " | ".join(print_list)
+        final_string:str = " | ".join(print_list)
 
         return final_string, good_tube
 
