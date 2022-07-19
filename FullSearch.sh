@@ -12,5 +12,6 @@ case $T_DC in
     #grep -R {$tubeID} "$sMDT_path/TubeTension/Processed/2020"/*.log ;;
     d) 
     printf "\n" 
-    grep -R $tubeID "$sMDT_path"/CAEN/Processed/2021/*.log ;;
+    #grep -R $tubeID "$sMDT_path"/CAEN/Processed/2022/2022_06/*.log ;;
+    grep -l $tubeID "$sMDT_path"/CAEN/Processed/2022/2022_06/*.log | wc -l ;;
 esac

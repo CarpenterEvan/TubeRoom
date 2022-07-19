@@ -1,21 +1,34 @@
-import GetFromDB
-from GetFromDB import Get_Tube_Info, ID
+from GetTubeInfo import Create_Final_Tuple
 import re
+import datetime 
+import sys
 counter = 0
 global d,s # I use this dictionary and set to filter out duplicates
 d = dict()
 s = set()
 
-WriteFile = (input("Cleaning? [y/n]: ") == "y")
-
+WriteFile = (sys.argv[-1] == "clean")
+CheckFile = (sys.argv[-1] == "check")
+Match = (sys.argv[-1] == "match" )
+if Match:
+    match_list = sys.argv[-2].split(",")
+    print(match_list[0])
 if WriteFile:
-    verifiedIDs = open("Verified_Today.txt", "a")
-else: pass
+    verifiedIDs = open(f"Verified_{datetime.date.today().strftime('%Y%m%d')}.txt", "a") # Writes to a file with yyyymmdd format in name
+    print("\x1b[32;5mCLEANING\x1b[0m") # Blinking green text "CLEANING"
+else: 
+    print("\x1b[31;5mNOT CLEANING\x1b[0m") # Blinking red text "NOT CLEANING"
 
+if CheckFile:
+    tube_list = open("Verified_Today.txt", "r").readlines()
+    newlist = [i.strip() for i in tube_list]
+    newlist.append("stop")
+
+#for tube in newlist: #tubeid = tube
 while True:
     tubeid = input("Tube ID: ")
-    is_this_tube = re.match("MSU[0-9]{5}", tubeid) != None
-    
+    #if tubeid in match_list:
+    #    print("\a")
     counter = counter + 1  if counter<=9 else 1
     counter = counter if len(tubeid)!=0 else 0
 
@@ -23,16 +36,19 @@ while True:
         if WriteFile:
             verifiedIDs.close()
         else: pass
-        print("All done! :) \n")
-        for i in d:
+        for i in sorted(d):
             print(i, d[i])
-        print("Total good: ", sum(d.values()))
+        print("Total: ", sum(d.values()))
+        print("\n All done! :) \n")
         exit()
     
-    verify_string, good_tube = Get_Tube_Info(tubeid)
+    verify_string, good_tube = Create_Final_Tuple(tubeid)
+
+    good_tube = good_tube if WriteFile=="True" else True 
+    # I only use good_tube for counting only the good tubes when writing the file, 
+    #when not writing the file, I want to count every tube
 
     date_string = verify_string[11:21]
-
     not_dashes = re.match("[0-9]{4}-[0-9]{2}-[0-9]{2}", date_string) != None 
 
     if date_string not in d and not_dashes and good_tube: # If I haven't seen this date before, initialize it
@@ -49,10 +65,7 @@ while True:
             verifiedIDs.write(tubeid)
             verifiedIDs.write("\n")
         else: pass
-    
-    print("", end="\033[1A \033[1D")
-    print(verify_string, counter if counter!=0 else "" )  
+    print("", end="\033[1A")
+    print(verify_string, 
+          counter if counter!=0 else "" )  
 
-
-    
-    

@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 
+
 global ID, T1, T2, DC, FV
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
-#white_text  = lambda x: f""
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
@@ -40,7 +40,7 @@ def Format_Database():
 ID, T1, T2, DC, FV = Format_Database()
 
 
-def Get_Tube_Info(input_tubeID:str):
+def Locate_Tube_Row(input_tubeID:str):
     try:
         tubeID = input_tubeID
         defaults = {"d": "MSU05123", # default (good)
@@ -49,13 +49,13 @@ def Get_Tube_Info(input_tubeID:str):
         if len(tubeID) == 1:
             tubeID = defaults[tubeID] # Default
         elif len(tubeID) == 0:
-            return ("-"*166, False)
+            return "-"*166
         tuberow, = ID.index[ ID["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
         # tuberow, unpacks just the first value of the tuple into the variable tuberow
+        return tubeID, tuberow
     except ValueError:
-        return (f"The ID '{tubeID}' either does not exist or is not in the database yet :( \a", False)
-    shipment_date = ID["Received"].iloc[ tuberow ]
-
+        return tubeID, -1 
+def Format_Tensions(tuberow:int):
     try:
         T1_date = T1["Tension"].iloc[ tuberow ]
         T1_tension = float(T1["T[g]"].iloc[ tuberow ])
@@ -65,7 +65,6 @@ def Get_Tube_Info(input_tubeID:str):
         T1_tension = 0.
         T1_length = 0.
     T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
-
     # I keep these seperate because it has been the case where there is no T1 and there is a T2
     # putting the two try/except blocks together would drop an error on no T1 and ignore the T2
     try: 
@@ -76,10 +75,25 @@ def Get_Tube_Info(input_tubeID:str):
         T2_time_delta_string = int(0)
 
     T2_time_delta = timedelta(days = T2_time_delta_string)
-    
-
     T2_date = datetime.strftime(T1_datetime + T2_time_delta, "%y-%m-%d") if T2_time_delta > timedelta(days=0) else 0
     T2_tension = round(T1_tension + T2_tension_delta , 3)
+
+    return T1_date, T1_tension, T1_length, T2_date, T2_tension
+
+def Shipment_and_Bend(tuberow:int):
+    shipment_date = ID["Received"].iloc[ tuberow ]
+    Bend_pass_string = ID["flagE"].iloc[ tuberow ]
+    return shipment_date, Bend_pass_string
+
+def Get_Tube_Info(input_tubeID:str):
+    tubeID, tuberow = Locate_Tube_Row(input_tubeID)
+    if tuberow == -1:
+        error_string = f"The ID '{tubeID}' either does not exist or is not in the database yet :( \a"
+        return error_string
+    else: pass
+
+    shipment_date, Bend_pass_string = Shipment_and_Bend(tuberow)
+    T1_date, T1_tension, T1_length, T2_date, T2_tension = Format_Tensions(tuberow)
 
     DC_date = DC["DCday"].iloc[ tuberow ]
     DC_DC = DC["DC[nA]"].iloc[ tuberow ]
@@ -124,7 +138,7 @@ def Get_Tube_Info(input_tubeID:str):
         DC_pass = color_pass_string(DC_pass_string, DC_flag)
         Final_pass = color_pass_string(Final_pass_string, good_tube)
 
-    print_list:list = [f"{tubeID: ^7}", 
+    print_list = [f"{tubeID: ^7}", 
                     f"{shipment_date: <10}",
                     f"Bend: {Bend_pass: <12}",
                     f"T1 on {T1_date} {T1_pass: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
