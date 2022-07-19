@@ -2,8 +2,6 @@
 import os,sys
 import re
 import pandas as pd
+import GetTubeInfo
 
-from datetime import datetime
-
-matches = bool(re.match("Pas", "Pass"))
-print(matches)
+GetTubeInfo.__doc__

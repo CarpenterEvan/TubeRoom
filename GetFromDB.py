@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 from datetime import datetime, timedelta
-
+__author__ = "Evan Carpenter"
+__version__ = "2"
 global ID, T1, T2, DC, FV
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
 #white_text  = lambda x: f""

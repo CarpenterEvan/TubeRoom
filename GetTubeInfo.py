@@ -5,14 +5,13 @@ from datetime import datetime, timedelta
 __author__ = "Evan Carpenter"
 __version__ = "3"
 
-
-
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
 def color_string(string, goal):
     '''Colors a string green or red using ANSI escape codes depending on iff the string matches the goal'''
+    
     passes = re.match(string, goal)
     if passes:
         return (green_text(string), True)
@@ -20,6 +19,7 @@ def color_string(string, goal):
         return (red_text(string), False)
 
 def Format_Database():
+    '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
     path = "../../Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt"
     try:
         df = pd.read_csv(path, 
@@ -36,7 +36,7 @@ def Format_Database():
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
     ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
-    T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["Tension", "Length", "Frequency",  "T1Date",  "flag", "L"])
+    T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
     T2 = pd.DataFrame(df["T2"].tolist()[2:], columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
     DC = pd.DataFrame(df["DC"].tolist()[2:], columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
     FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment",   "None", "None"])
@@ -105,7 +105,7 @@ def Filter_Columns(tuberow):
        || Name: 4407, dtype: object|| 
        -------------------------------''' 
     fullrow = DB.iloc[tuberow]
-    row = {"tubeid"           :    fullrow.tubeID,
+    row = {"tubeID"           :    fullrow.tubeID,
 
            "Shipment_date"    :  fullrow.Received,
 
@@ -134,6 +134,7 @@ def Filter_Columns(tuberow):
     return row
 
 def Format_Values(row:dict):
+    tubeID = row["tubeID"]
     shipment_date = row["Shipment_date"]
     Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS")
     T1_flag, T1_passed = color_string(row["T1_flag"], "pass")
@@ -142,7 +143,7 @@ def Format_Values(row:dict):
     try:
         T1_date:str = row["T1_date"]
         T1_tension  = float(row["T1_tension"])
-        T1_length   = float(row["T1_"])
+        T1_length   = float(row["T1_length"])
     except ValueError:
         T1_date = "11-11-11"
         T1_tension  = 0.
@@ -172,7 +173,8 @@ def Format_Values(row:dict):
     except ValueError:
         DC_total_time = "00:00:00"
     good_tube = all([Bend_passed, T1_passed, T2_passed, DC_passed])
-    print_list = [f"{shipment_date: <10}", f"Bend: {Bend_flag: <12}",
+    print_list = [f"{tubeID}",
+                  f"{shipment_date: <10}", f"Bend: {Bend_flag: <12}",
                   f"T1 on {T1_date} {T1_flag: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
                   f"T2 on {T2_date: <9} {T2_flag: <15} {T2_tension:0<7}g",
                   f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_flag: >13}"]
@@ -206,5 +208,3 @@ def Create_Final_Tuple(input_tubeID:str):
     final_string:str = " | ".join(print_list)
 
     return final_string, good_tube
-
-    
