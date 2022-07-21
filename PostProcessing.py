@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 stripstring = lambda x: x.strip("[];]:")
 
-df = pd.read_csv("~/Desktop/CAENPS_20220518_test2.log",
+df = pd.read_csv("~/Desktop/CAENPS_20220708_test.log",
                  skiprows=16,
                  delimiter=" ",
                  usecols=[0, 3, 5, 7, 9],
@@ -37,6 +37,7 @@ first_2900 = df_VMon[df_VMon["val"]>=2796.].index
 last_2900 = df_VMon[df_VMon["val"]>=2796.].index[-1]
 print(first_2900)
 print(last_2900)
+plt.plot()
 #npdf = df.to_numpy()
 #print(npdf)
 

@@ -32,7 +32,7 @@ while True:
     counter = counter + 1  if counter<=9 else 1
     counter = counter if len(tubeid)!=0 else 0
 
-    if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT"]:
+    if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "SAL"]:
         if WriteFile:
             verifiedIDs.close()
         else: pass
@@ -50,8 +50,16 @@ while True:
 
     date_string = verify_string[11:21]
     not_dashes = re.match("[0-9]{4}-[0-9]{2}-[0-9]{2}", date_string) != None 
-
-    if date_string not in d and not_dashes and good_tube: # If I haven't seen this date before, initialize it
+    if (good_tube) and (not_dashes):
+        if date_string not in d.keys():
+            d[date_string] = 1
+            s.add(tubeid)
+        elif (tubeid not in s):
+            s.add(tubeid)
+            d[date_string] += 1
+        else: pass
+    else: pass
+    '''if date_string not in d and not_dashes and good_tube: # If I haven't seen this date before, initialize it
         d[date_string] = 1 
         if WriteFile:
             verifiedIDs.write(tubeid)
@@ -64,7 +72,7 @@ while True:
         if WriteFile:
             verifiedIDs.write(tubeid)
             verifiedIDs.write("\n")
-        else: pass
+        else: pass'''
     print("", end="\033[1A")
     print(verify_string, 
           counter if counter!=0 else "" )  

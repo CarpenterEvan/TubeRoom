@@ -2,8 +2,14 @@ import os
 import re
 import pandas as pd
 from datetime import datetime, timedelta
+import pathlib
+
+home = pathlib.Path.home()
+GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
+final = pathlib.Path.joinpath(home, GDrive_to_DB)
 __author__ = "Evan Carpenter"
 __version__ = "3"
+
 
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
@@ -20,7 +26,7 @@ def color_string(string, goal):
 
 def Format_Database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
-    path = "../../Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt"
+    path = final
     try:
         df = pd.read_csv(path, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
@@ -208,3 +214,4 @@ def Create_Final_Tuple(input_tubeID:str):
     final_string:str = " | ".join(print_list)
 
     return final_string, good_tube
+

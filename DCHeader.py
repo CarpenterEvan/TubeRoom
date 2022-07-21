@@ -18,8 +18,9 @@ The following text describes the code, use it as a reference, not a book!!
 '''
 
 from os.path import exists
-from sys import exit
+
 from datetime import date, datetime
+import pathlib
 '''
 1) ###########################################################################################
 '''
@@ -33,26 +34,43 @@ in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I 
 2) ###########################################################################################
 '''
 
-file_exists = exists(f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test.log")
-if file_exists==False:
-    processed_file_exists = exists(f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test.log")
+home = pathlib.Path.home()
+GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN")
+home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB) 
+
+if home_to_DB.exists():
+    path_to_Google_or_Local_file = home_to_DB
+else:
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(home, pathlib.Path(__file__).absolute().parent, "outputs")
+    print(f"\nCould not find Google Drive!") 
+
+file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()
+
+if file_exists==False and home_to_DB.exists():
+    processed_file_exists = exists(pathlib.Path.joinpath(home_to_DB, f"Processed/CAENPS_{year}{month}{day}_test.log"))
     file_exists = processed_file_exists # True or False
 
 try: 
     test_number = int(input("Test Number?: ")) if file_exists else ""
 except ValueError:
-    print(" \n\n Test Number must be a number, it is the number at end of the .log file \n '..._test\x1b[32m2\x1b[0m.log' for example \n\n ")
+    print(" \n\n Test Number must be a number, it is the number at end of the .log file \n 'CAENPS_20220707_test\x1b[32m2\x1b[0m.log' for example \n\n ")
     exit() 
 
-# \x1b[32m;5m this text is green \x1b[0m
-file_name = f"./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/CAENPS_{year}{month}{day}_test{test_number}.log"
-print(f"\nFile Name: \x1b[32mCAENPS_{year}{month}{day}_test{test_number}.log\x1b[0m")
+# "\x1b[32m;5m this text is green \x1b[0m"
+
+new_file_name = f"CAENPS_{year}{month}{day}_test{test_number}.log"
+
+file_path = pathlib.Path.joinpath(path_to_Google_or_Local_file, new_file_name)
+print(f"Saving to: {file_path.parent}/\x1b[32m{new_file_name}\x1b[0m")
 
 operator = input("Operator: ")
 if operator == "stop":
     exit()
 
 print(f"Time:     {time}")
+print("--------Begin Scanning--------")
+print("     (type \x1b[37;5mstop\x1b[0m to exit)")
+
 '''
 3) ###########################################################################################
 '''
@@ -87,12 +105,13 @@ elif finish != "y":
 '''
 4) ###########################################################################################
 '''
+path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
-with open("./Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/_CAENPS_2022MMDD_template.log", 'r') as Template:
-    with open(file_name, 'a') as Output:
+with open(path_to_template, 'r') as Template:
+    with open(file_path, 'a') as Output:
         lines = Template.readlines()
         Output.write(lines[0])
-        Output.write(lines[1].replace("Evan", f"{operator}"))
+        Output.write(lines[1].replace("Name", f"{operator}"))
         Output.write(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
         Output.writelines(lines[3:14])
         Output.write(lines[14][0:16]+ ID_string + "\n")
