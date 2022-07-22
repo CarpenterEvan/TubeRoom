@@ -33,11 +33,8 @@ df_VMon = df[(df["par"]=="VMon") & (df["Location"]==f"{bd}")].reset_index()
 #df = df.resample("1S", label="right").mean().fillna(method="ffill")
 print(df_IMon)
 print(df_VMon)
-first_2900 = df_VMon[df_VMon["val"]>=2796.].index
-last_2900 = df_VMon[df_VMon["val"]>=2796.].index[-1]
-print(first_2900)
-print(last_2900)
-plt.plot()
+
+plt.plot(df_IMon[""])
 #npdf = df.to_numpy()
 #print(npdf)
 

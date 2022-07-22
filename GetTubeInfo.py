@@ -6,6 +6,7 @@ import pathlib
 
 home = pathlib.Path.home()
 GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
+path_to_local = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "outputs", "TUBEDB.txt")
 final = pathlib.Path.joinpath(home, GDrive_to_DB)
 __author__ = "Evan Carpenter"
 __version__ = "3"
@@ -24,18 +25,18 @@ def color_string(string, goal):
     elif not passes: 
         return (red_text(string), False)
 
-def Format_Database():
+def format_database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
     path = final
     try:
-        df = pd.read_csv(path, 
+        df = pd.read_csv(path_to_local, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True)
     except FileNotFoundError:
         print("FileNotFoundError: Couldn't reach TUBEDB.txt, maybe Google Drive is not reachable from here?")
         print("                   Check where your Google Drive Desktop is installed")
-        print("                   You want to access ./Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
+        print("                   Unless you installed Google Drive in a special, non-default location, you want to access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
         print(f"                   This file is in {__file__}")
         exit()
     print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
@@ -50,9 +51,9 @@ def Format_Database():
     return newdf
 
 global DB # Declare global variables so I can access them inside functions
-DB = Format_Database()
+DB = format_database()
 
-def Locate_Tube_Row(input_tubeID:str):
+def locate_tube_row(input_tubeID:str):
     '''Takes in a tube's ID and finds the ID in the tubeID column of the dataframe. 
     There are three default letters that I use for quick testing which translate to IDs: d, f, b.
     If something not of the form MSU[0-9]{5} (MSU followed by 5 numbers) is entered, the defaults are checked
@@ -78,7 +79,7 @@ def Locate_Tube_Row(input_tubeID:str):
     except ValueError: # This means the ID is valid but not in the DB
         return -2 
         
-def Filter_Columns(tuberow):
+def filter_columns(tuberow):
     '''A tyical 'row' object for a given ID looks like:
        -------------------------------
        || tubeID          MSU05123 || 0
@@ -139,7 +140,7 @@ def Filter_Columns(tuberow):
     
     return row
 
-def Format_Values(row:dict):
+def format_values(row:dict):
     tubeID = row["tubeID"]
     shipment_date = row["Shipment_date"]
     Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS")
@@ -186,8 +187,8 @@ def Format_Values(row:dict):
                   f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_flag: >13}"]
     return print_list, good_tube
 
-def Create_Final_Tuple(input_tubeID:str):
-    tuberow = Locate_Tube_Row(input_tubeID)
+def get_formatted_tuple(input_tubeID:str):
+    tuberow = locate_tube_row(input_tubeID)
 
     filler_string = "-"*166
     error_string = f"The ID '{input_tubeID}' either does not exist or is not in the database yet :("
@@ -198,11 +199,11 @@ def Create_Final_Tuple(input_tubeID:str):
     else: 
         pass
 
-    full_tuberow = Locate_Tube_Row(input_tubeID)
+    full_tuberow = locate_tube_row(input_tubeID)
 
-    row = Filter_Columns(full_tuberow)
+    row = filter_columns(full_tuberow)
 
-    print_list, good_tube = Format_Values(row)
+    print_list, good_tube = format_values(row)
     
     if row["Final_flag"] == "YES" and good_tube:
         Final_flag = green_text(row["Final_flag"])
@@ -210,7 +211,6 @@ def Create_Final_Tuple(input_tubeID:str):
         Final_flag = red_text(row["Final_flag"])
 
     print_list.append(f"Final: {Final_flag: <12}")
-
     final_string:str = " | ".join(print_list)
 
     return final_string, good_tube

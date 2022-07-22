@@ -41,7 +41,7 @@ home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB)
 if home_to_DB.exists():
     path_to_Google_or_Local_file = home_to_DB
 else:
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(home, pathlib.Path(__file__).absolute().parent, "outputs")
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "outputs")
     print(f"\nCould not find Google Drive!") 
 
 file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()
@@ -86,6 +86,8 @@ while True:
     if this_tube not in ID_set:
         ID_set.add(this_tube)
         DC_tube_IDs.append(this_tube)
+    elif this_tube in ID_set:
+        counter -= 1
     counter +=  1
 
 print(DC_tube_IDs)
@@ -100,6 +102,7 @@ finish = input("Finish? [y/n]: ")
 if finish == "y":
     pass
 elif finish != "y":
+    print("OK, no file made")
     exit()
 
 '''
