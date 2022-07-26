@@ -118,6 +118,6 @@ with open(path_to_template, 'r') as Template:
         Output.write(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
         Output.writelines(lines[3:14])
         Output.write(lines[14][0:16]+ ID_string + "\n")
-        Output.write(lines[15])
+        Output.write(lines[15] + "\n")
 
 print("\n\n All Done! :) \n\n")
