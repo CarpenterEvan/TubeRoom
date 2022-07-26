@@ -46,19 +46,16 @@ else:
     file_path = pathlib.Path("")
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
 
-'''
-if CheckFile:
-    file_name = input("Name: ")
-    tube_list = open(f"outputs/{file_name}", "r").readlines()
+
+'''if CheckFile:
+    file_name = input("Date [yyyymmdd]: ")
+    tube_list = open(f"outputs/Verified_{file_name}.txt", "r").readlines()
     newlist = [i.strip() for i in tube_list]
     newlist.append("stop")
-#for tube in newlist: #tubeid = tube
-# #if tubeid in match_list:
-    #    print("\a")
-'''
+for tube in newlist: 
+    tubeid = tube'''
 while True:
     tubeid = input("Tube ID: ")
-
     if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "SAL"]:
         finish_writing_files()
         for i in sorted(d):
