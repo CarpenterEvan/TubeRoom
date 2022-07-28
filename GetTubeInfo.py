@@ -1,16 +1,17 @@
 import os
-import re
+from re import match
 import pandas as pd
 from datetime import datetime, timedelta
-import pathlib
+from pathlib import Path 
 
-home = pathlib.Path.home()
-GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "outputs", "TUBEDB.txt")
-final = pathlib.Path.joinpath(home, GDrive_to_DB)
+home = Path.home()
+GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
+path_to_local = Path.joinpath(Path(__file__).absolute().parent, "outputs", "TUBEDB.txt")
+final = Path.joinpath(home, GDrive_to_DB)
 __author__ = "Evan Carpenter"
 __version__ = "3"
-
+'''This is a module designed to take in the ID of an sMDT barcode and not only find it in the TUBEDB.txt file, 
+which is stored in the Google Drive, but to format the values so that the result is easy to read'''
 
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
@@ -18,8 +19,7 @@ flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
 def color_string(string, goal):
     '''Colors a string green or red using ANSI escape codes depending on iff the string matches the goal'''
-    
-    passes = re.match(string, goal)
+    passes = match(string, goal)
     if passes:
         return (green_text(string), True)
     elif not passes: 
@@ -39,7 +39,8 @@ def format_database():
         print("                   Unless you installed Google Drive in a special, non-default location, you want to access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
         print(f"                   This file is in {__file__}")
         exit()
-    print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
+    if __name__ == "RubTubeFiles":
+        print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
     ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
@@ -50,7 +51,6 @@ def format_database():
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
     return newdf
 
-global DB # Declare global variables so I can access them inside functions
 DB = format_database()
 
 def locate_tube_row(input_tubeID:str):
@@ -58,13 +58,13 @@ def locate_tube_row(input_tubeID:str):
     There are three default letters that I use for quick testing which translate to IDs: d, f, b.
     If something not of the form MSU[0-9]{5} (MSU followed by 5 numbers) is entered, the defaults are checked
     If the ID is not found, the row returned is -1 '''
-
+    global DB
     defaults = {"d": "MSU05123", # default (good)
                 "f": "MSU01341", # fails multiple tests
                 "b": "MSU00229"} # multiple tests missing "-----"
     tubeID = input_tubeID
     try:
-        istube = re.match("MSU[0-9]{5}", tubeID) 
+        istube = match("MSU[0-9]{5}", tubeID) 
         assert istube # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
         # "tuberow, " unpacks just the first value of the tuple into the variable tuberow
         tuberow, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
@@ -137,7 +137,6 @@ def filter_columns(tuberow):
 
            "Final_flag"       :        fullrow.ok}
 
-    
     return row
 
 def format_values(row:dict):
@@ -148,7 +147,7 @@ def format_values(row:dict):
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
     DC_flag, DC_passed = color_string(row["DC_flag"], "OK")
     try:
-        T1_date:str = row["T1_date"]
+        T1_date:str = row["T1_date"] # Date of UM Tension test, so technically the second tension test, this gets assigned to T2_date later
         T1_tension  = float(row["T1_tension"])
         T1_length   = float(row["T1_length"])
     except ValueError:
@@ -165,8 +164,11 @@ def format_values(row:dict):
         T2_tension_delta =  -T1_tension
         T2_time_delta_string = int(0)
     T2_time_delta = timedelta(days = T2_time_delta_string)
-    T2_date = datetime.strftime(T1_datetime + T2_time_delta, "%y-%m-%d") if T2_time_delta > timedelta(days=0) else 0
     T2_tension = round(T1_tension + T2_tension_delta , 3)
+
+    T2_date = T1_date # Our T1 is the second tension test, so I want to call it T2
+    T1_date = datetime.strftime(T1_datetime - T2_time_delta, "%y-%m-%d") if T2_time_delta > timedelta(days=0) else "11-11-11"
+    
 
     DC_DC = row["DC_DC"]
     DC_date = row["DC_date"]
@@ -214,4 +216,3 @@ def get_formatted_tuple(input_tubeID:str):
     final_string:str = " | ".join(print_list)
 
     return final_string, good_tube
-
