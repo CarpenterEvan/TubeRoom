@@ -17,8 +17,6 @@ All_Files = DC_Files + Processed_2022_06_Files
 
 path_to_local = Path.joinpath(Path(__file__).absolute().parent, "outputs")
 
-
-
 ID_list = []
 
 for file in All_Files:
@@ -37,11 +35,14 @@ for line in ID_list:
     elif thisID in s and thisID in d.keys():
         d[thisID] +=1
 full_list = []
-IDFile = open(Path.joinpath(path_to_local, "IDOutput.txt"), "w")
+#IDFile = open(Path.joinpath(path_to_local, "IDOutput.txt"), "w")
 for id in d.keys():
     full_tuberow = GetTubeInfo.locate_tube_row(id)
     date = GetTubeInfo.filter_columns(full_tuberow)["Shipment_date"]
     full_list.append((date, id, d[id]))
-    IDFile.write(f"{date}\t{id}\t{d[id]}\n")
+df = pd.DataFrame(data=full_list, columns=["Date", "ID", "ndc"])
+df.to_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 
-IDFile.close()
+'''IDFile.write(f"{date}\t{id}\t{d[id]}\n")
+
+IDFile.close()'''

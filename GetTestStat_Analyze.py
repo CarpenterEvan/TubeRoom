@@ -7,12 +7,19 @@ GDrive_path = Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
 path_to_local = Path.joinpath(Path(__file__).absolute().parent, "outputs")
 
 
-df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep="\t", names=["Date", "ID", "ndc"])
+df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",", names=["Date", "ID", "ndc"])
 
 
 
 date_list = ['2022-06-21']#, '2022-06-28', '2022-07-07', '2022-07-14']
-date = '2022-06-28'
+date = '2022-07-07'
+print(df)
+df_one_date = df[df["Date"]==date].reset_index()
+ndc_one_date = df_one_date["ndc"]
+total_number = len(ndc_one_date)
+
+print(ndc_one_date)
+
 left_list = [0, 3, 105, 206]
 #num_graphs = len(date_list)
 runs_list = [1,2,3,4,5]
@@ -21,9 +28,6 @@ fig = plt.figure(figsize=(5, 5), tight_layout=True)
 
 #for i, date in enumerate(date_list):
 
-df_one_date = df[df["Date"]==date].reset_index()
-ndc_one_date = df_one_date["ndc"]
-total_number = len(ndc_one_date)
 
 ax = fig.add_subplot(111,
                      title=f"Number of DC runs for tubes from {date}", 
@@ -33,6 +37,7 @@ ax = fig.add_subplot(111,
                      aspect="auto")
 
 n, bins, patches = ax.hist(ndc_one_date, bins=runs_list, align="left", rwidth=0.8)
+print(runs_list)
 total_treated = int(sum(n[1:]))
 
 bin_centers = [(patch._x0 + patch._x1)/2 for patch in patches]
@@ -56,5 +61,6 @@ need_to_treat = f"Need to treat (not shown): {0}"
 #ax.text(0.725, 0.6, need_to_treat, 
 #        horizontalalignment="center",
 #        transform=ax.transAxes)
-plt.savefig(Path.joinpath(path_to_local,f"nDC_{date.replace('-','')}"), dpi=200, format="png")
+
+#plt.savefig(Path.joinpath(path_to_local,f"nDC_{date.replace('-','')}"), dpi=200, format="png")
 plt.show()
