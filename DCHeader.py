@@ -41,7 +41,7 @@ home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB)
 if home_to_DB.exists():
     path_to_Google_or_Local_file = home_to_DB
 else:
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "outputs")
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "DC")
     print(f"\nCould not find Google Drive!") 
 
 file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()

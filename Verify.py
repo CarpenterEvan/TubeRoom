@@ -32,16 +32,21 @@ def finish_writing_files():
     else: pass
 
 if SearchFor:
-    print("Type 'stop' to get to scanning.")
-    search_list = []
-    search_ID = input("ID to search for: ")
-    search_list.append(search_ID)
-    while search_ID != "stop":
-        search_ID = input("another one? :")
-        search_list.append(search_ID)
+    #print("Type 'stop' to get to scanning.")
+    search_list = ["MSU17982",
+                   "MSU16975"]
+    #search_ID = input("ID to search for: ")
+    #search_list.append(search_ID)
+    #while search_ID != "stop":
+    #    search_ID = input("another one? :")
+    #    if search_ID == "stop":
+    #        break
+    #    else: 
+    #        search_list.append(search_ID)
+else: search_list = []
 if WriteFile:
     file_name = f"Verified_{date.today().strftime('%Y%m%d')}.txt"
-    file_path = Path.joinpath(Path(__file__).absolute().parent,"outputs", file_name)
+    file_path = Path.joinpath(Path(__file__).absolute().parent,"Verifying", file_name)
     VerifiedIDs = open(file_path, "a") # Writes to a file with yyyymmdd format in name
     print(f"\x1b[32;5mMaking Verified File\x1b[0m: {file_path}") # Blinking green text "CLEANING"
 elif OrderedFile:
@@ -49,7 +54,7 @@ elif OrderedFile:
     layer = input("     Layer?: ")
     ordered_list = []
     file_name = f"Multilayer{multilayer}_Layer{layer}_{date.today().strftime('%Y%m%d')}.txt"
-    file_path = Path.joinpath(Path(__file__).absolute().parent,"outputs", file_name)
+    file_path = Path.joinpath(Path(__file__).absolute().parent,"Verifying", file_name)
     OrderedIDs = open(file_path, "w")
     print(f"\x1b[32;5mMaking Ordered File\x1b[0m at: {file_path}")
 else: 
@@ -59,13 +64,13 @@ else:
 
 if CheckFile:
     file_name = input("Date [yyyymmdd]: ")
-    tube_list = open(f"outputs/Verified_{file_name}.txt", "r").readlines()
+    tube_list = open(f"Verifying/{file_name}.txt", "r").readlines()#Verified_
     newlist = [i.strip() for i in tube_list]
     newlist.append("stop")
 
 
 def main(inputs):
-    global d,s, counter # I use this dictionary and set to filter out duplicates
+    global d,s, counter, search_list # I use this dictionary and set to filter out duplicates
     tubeid = inputs
     if tubeid in search_list:
         print("\a")
@@ -86,7 +91,7 @@ def main(inputs):
     # good_tube is checked before adding the tubeid into the counting dictionary.
     # it is important only good tubes are counted when writing to a file, but
     # when not writing the file, I want to count every tube no matter what. 
-    good_tube = good_tube if WriteFile=="True" else True 
+    good_tube = good_tube if WriteFile or CheckFile else True 
 
 
     date_string = verify_string[11:21]
@@ -103,16 +108,17 @@ def main(inputs):
             d[date_string] += 1
         else: pass
     else: pass
-
     print("", end="\033[1A")
     print(verify_string, 
-          counter if counter!=0 else "" )  
+          counter if counter!=0 else "")  
 
 
 if not CheckFile:
     while True:
         main(input("Tube ID: "))
+
 if CheckFile:
     for tube in newlist: 
         main(tube)
+        print("\s")
 

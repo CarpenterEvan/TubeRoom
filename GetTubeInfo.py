@@ -6,7 +6,7 @@ from pathlib import Path
 
 home = Path.home()
 GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = Path.joinpath(Path(__file__).absolute().parent, "outputs", "TUBEDB.txt")
+path_to_local = Path.joinpath(Path(__file__).absolute().parent, "Verifying", "TUBEDB.txt")
 final = Path.joinpath(home, GDrive_to_DB)
 __author__ = "Evan Carpenter"
 __version__ = "3"
@@ -39,7 +39,7 @@ def format_database():
         print("                   Unless you installed Google Drive in a special, non-default location, you want to access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
         print(f"                   This file is in {__file__}")
         exit()
-    if __name__ == "RubTubeFiles":
+    if __name__ == "GetTubeInfo":
         print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
