@@ -1,5 +1,4 @@
 '''
-The following text describes the code, use it as a reference, not a book!!
     1)  Get the date and time for today, I use the time and date in the file, and the date for the file name
             For example, CAENPS_20220512_test.log for 2022-05-12
 
@@ -81,7 +80,7 @@ while True:
     board_number = 4 if counter <= 23 else 1 
     this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
 
-    if this_tube == "stop":
+    if this_tube == "stop" or this_tube == "MSU07373":
         break
     if this_tube not in ID_set:
         ID_set.add(this_tube)
@@ -99,7 +98,7 @@ ID_string = " ".join(DC_tube_IDs)
 
 finish = input("Finish? [y/n]: ")
 
-if finish == "y":
+if finish == "y" or finish == "MSU07373":
     pass
 elif finish != "y":
     print("OK, no file made")

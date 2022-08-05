@@ -50,10 +50,11 @@ if WriteFile:
     VerifiedIDs = open(file_path, "a") # Writes to a file with yyyymmdd format in name
     print(f"\x1b[32;5mMaking Verified File\x1b[0m: {file_path}") # Blinking green text "CLEANING"
 elif OrderedFile:
+    module = input("       Mod?: ")
     multilayer = input("MultiLayer?: ")
     layer = input("     Layer?: ")
     ordered_list = []
-    file_name = f"Multilayer{multilayer}_Layer{layer}_{date.today().strftime('%Y%m%d')}.txt"
+    file_name = f"Mod{module}_Multilayer{multilayer}_Layer{layer}.txt"
     file_path = Path.joinpath(Path(__file__).absolute().parent,"Verifying", file_name)
     OrderedIDs = open(file_path, "w")
     print(f"\x1b[32;5mMaking Ordered File\x1b[0m at: {file_path}")

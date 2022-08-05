@@ -2,7 +2,6 @@ import GetTubeInfo
 from pathlib import Path
 import pandas as pd 
 import matplotlib.pyplot as plt
-import numpy
 home = Path.home()
 GDrive_path = Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
 path_to_local = Path.joinpath(Path(__file__).absolute().parent, "DC")
@@ -22,9 +21,9 @@ df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 2022-05-31
 2022-05-03
 2022-04-26
-
 '''
-date = '2022-07-14'
+
+date = '2022-05-31'
 
 df_one_date = df[df["Date"]==date].reset_index()
 

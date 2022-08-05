@@ -136,7 +136,6 @@ def filter_columns(tuberow):
 
 
            "Final_flag"       :        fullrow.ok}
-
     return row
 
 def format_values(row:dict):
