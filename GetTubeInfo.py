@@ -1,3 +1,6 @@
+__author__ = "Evan Carpenter"
+__version__ = "3"
+
 import os
 from re import match
 import pandas as pd
@@ -7,12 +10,11 @@ from pathlib import Path
 home = Path.home()
 GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
 path_to_local = Path.joinpath(Path(__file__).absolute().parent, "Verifying", "TUBEDB.txt")
-final = Path.joinpath(home, GDrive_to_DB)
-__author__ = "Evan Carpenter"
-__version__ = "3"
+final_path = Path.joinpath(home, GDrive_to_DB)
+
+
 '''This is a module designed to take in the ID of an sMDT barcode and not only find it in the TUBEDB.txt file, 
 which is stored in the Google Drive, but to format the values so that the result is easy to read'''
-
 green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
@@ -24,22 +26,28 @@ def color_string(string, goal):
         return (green_text(string), True)
     elif not passes: 
         return (red_text(string), False)
-
+        
 def format_database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
-    path = final
+    path = final_path
     try:
-        df = pd.read_csv(path_to_local, 
+        df = pd.read_csv(final_path, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True)
     except FileNotFoundError:
-        print("FileNotFoundError: Couldn't reach TUBEDB.txt, maybe Google Drive is not reachable from here?")
-        print("                   Check where your Google Drive Desktop is installed")
-        print("                   Unless you installed Google Drive in a special, non-default location, you want to access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-        print(f"                   This file is in {__file__}")
-        exit()
+        print(f'''\n\n1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt\n2.) Trying local path {path_to_local}\n''')
+        try: 
+            df = pd.read_csv(path_to_local, 
+                        names = ["ID", "T1", "T2", "DC", "FV"],  
+                        delimiter = "|",
+                        memory_map = True)
+            path = path_to_local
+        except FileNotFoundError:
+            print(f"3.) Still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
+            exit()
     if __name__ == "GetTubeInfo":
+        print(f"Database File is from: {final_path}")
         print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
@@ -140,33 +148,48 @@ def filter_columns(tuberow):
 
 def format_values(row:dict):
     tubeID = row["tubeID"]
-    shipment_date = row["Shipment_date"]
+    shipment_date_string = row["Shipment_date"].strip()
+    shipment_date = datetime.strptime(shipment_date_string, "%Y-%m-%d")
     Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS")
     T1_flag, T1_passed = color_string(row["T1_flag"], "pass")
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
     DC_flag, DC_passed = color_string(row["DC_flag"], "OK")
     try:
+        
         T1_date:str = row["T1_date"] # Date of UM Tension test, so technically the second tension test, this gets assigned to T2_date later
         T1_tension  = float(row["T1_tension"])
         T1_length   = float(row["T1_length"])
+
     except ValueError:
-        T1_date = "11-11-11"
+        
+        T1_date = "01-01-01"
         T1_tension  = 0.
         T1_length   = 0.
+
     T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
     # I keep these seperate because it has been the case where there is no T1 and there is a T2
     # putting the two try/except blocks together would drop an error on no T1 and ignore the T2
     try: 
+
         T2_tension_delta = float(row["T2_tension_delta"])
         T2_time_delta_string = int(row["T2_time_delta"][:-1])
+
     except ValueError: 
+
         T2_tension_delta =  -T1_tension
         T2_time_delta_string = int(0)
+
     T2_time_delta = timedelta(days = T2_time_delta_string)
     T2_tension = round(T1_tension + T2_tension_delta , 3)
 
-    T2_date = T1_date # Our T1 is the second tension test, so I want to call it T2
-    T1_date = datetime.strftime(T1_datetime - T2_time_delta, "%y-%m-%d") if T2_time_delta > timedelta(days=0) else "11-11-11"
+    if shipment_date < T1_datetime and timedelta(days=0) < T2_time_delta: 
+
+        T2_date = T1_date # Our T1 is the second tension test, so I want to call it T2
+        T1_date = datetime.strftime(T1_datetime - T2_time_delta, "%y-%m-%d")
+
+    else: 
+
+        T2_date = "--------"
     
 
     DC_DC = row["DC_DC"]
@@ -174,15 +197,16 @@ def format_values(row:dict):
     try: 
         DC_seconds = int(row["DC_seconds"])
         DC_hours = DC_seconds // 3600
-        DC_passed:bool = (DC_hours>=4)
+        DC_pass:bool = (DC_hours>=4) and DC_passed
         DC_minutes = (DC_seconds - DC_hours * 3600) // 60
         DC_seconds = DC_seconds - DC_minutes * 60 - DC_hours * 3600
         DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}" 
     except ValueError:
         DC_total_time = "00:00:00"
-    good_tube = all([Bend_passed, T1_passed, T2_passed, DC_passed])
+        DC_pass = False
+    good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
     print_list = [f"{tubeID}",
-                  f"{shipment_date: <10}", f"Bend: {Bend_flag: <12}",
+                  f"{shipment_date_string: <10}", f"Bend: {Bend_flag: <12}",
                   f"T1 on {T1_date} {T1_flag: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
                   f"T2 on {T2_date: <9} {T2_flag: <15} {T2_tension:0<7}g",
                   f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_flag: >13}"]

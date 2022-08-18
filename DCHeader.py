@@ -112,11 +112,11 @@ path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_
 with open(path_to_template, 'r') as Template:
     with open(file_path, 'a') as Output:
         lines = Template.readlines()
-        Output.write(lines[0])
-        Output.write(lines[1].replace("Name", f"{operator}"))
-        Output.write(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
+        Output.writelines(lines[0])
+        Output.writelines(lines[1].replace("Name", f"{operator}"))
+        Output.writelines(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
         Output.writelines(lines[3:14])
-        Output.write(lines[14][0:16]+ ID_string + "\n")
-        Output.write(lines[15] + "\n")
+        Output.writelines(lines[14][0:16]+ ID_string + "\n")
+        Output.writelines(lines[15])
 
 print("\n\n All Done! :) \n\n")

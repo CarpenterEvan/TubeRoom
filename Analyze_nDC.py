@@ -23,8 +23,11 @@ df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 2022-04-26
 '''
 
-date = '2022-05-31'
-
+date = '2022-02-08'
+print(df)
+df["Date"] = pd.to_datetime(df["Date"])
+printdf = df["Date"].map(lambda x: x.strptime('%Y-%m-%d'))
+print(printdf)
 df_one_date = df[df["Date"]==date].reset_index()
 
 ndc_one_date = df_one_date["ndc"]
@@ -38,11 +41,6 @@ print(df_one_date[df_one_date["ndc"]>2].sort_values("ndc"))
 figure_size = (max_num_treatments, 5) if max_num_treatments > 5 else (5,5) 
 # but when there are only 2-3 tests, I don't want the figure to be only 2-3 wide!!
 fig = plt.figure(figsize=figure_size, tight_layout=True)
-
-
-#for i, date in enumerate(date_list):
-
-
 ax = fig.add_subplot(111,
                      title=f"Number of DC runs for tubes from {date}", 
                      xlabel="Number of DC runs (on CAEN)",
