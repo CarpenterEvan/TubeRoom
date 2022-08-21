@@ -1,7 +1,7 @@
 __author__ = "Evan Carpenter"
-__version__ = "3"
+__version__ = "3.1"
 
-import os
+from os.path import getctime
 from re import match
 import pandas as pd
 from datetime import datetime, timedelta
@@ -9,13 +9,13 @@ from pathlib import Path
 
 home = Path.home()
 GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = Path.joinpath(Path(__file__).absolute().parent, "Verifying", "TUBEDB.txt")
+path_to_local = Path.joinpath(Path("").absolute().parent, "Verifying", "TUBEDB.txt")
 final_path = Path.joinpath(home, GDrive_to_DB)
 
 
 '''This is a module designed to take in the ID of an sMDT barcode and not only find it in the TUBEDB.txt file, 
 which is stored in the Google Drive, but to format the values so that the result is easy to read'''
-green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # I don't know how this affects string length
+green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # It seems that this adds +9 to length of string
 red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
@@ -29,33 +29,42 @@ def color_string(string, goal):
         
 def format_database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
-    path = final_path
     try:
         df = pd.read_csv(final_path, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True)
+        path_used = final_path
     except FileNotFoundError:
-        print(f'''\n\n1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt\n2.) Trying local path {path_to_local}\n''')
+
+        print(f'''
+        
+        1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt
+        2.) Trying local path {path_to_local}
+        
+        ''')
         try: 
             df = pd.read_csv(path_to_local, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True)
-            path = path_to_local
+            path_used = path_to_local
         except FileNotFoundError:
-            print(f"3.) Still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
-            exit()
+            exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
     if __name__ == "GetTubeInfo":
-        print(f"Database File is from: {final_path}")
-        print("Last Updated:", datetime.fromtimestamp(os.path.getctime(path)))
+        print(f"Database File is from: {path_used}")
+
+        print("Last Updated:", datetime.fromtimestamp(getctime(path_used)))
+
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
+
     ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
     T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
     T2 = pd.DataFrame(df["T2"].tolist()[2:], columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
     DC = pd.DataFrame(df["DC"].tolist()[2:], columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
     FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment",   "None", "None"])
+
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
     return newdf
 
@@ -69,25 +78,25 @@ def locate_tube_row(input_tubeID:str):
     global DB
     defaults = {"d": "MSU05123", # default (good)
                 "f": "MSU01341", # fails multiple tests
-                "b": "MSU00229"} # multiple tests missing "-----"
+                "b": "MSU00229"} # multiple tests missing--> "-----"
     tubeID = input_tubeID
     try:
         istube = match("MSU[0-9]{5}", tubeID) 
         assert istube # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
         # "tuberow, " unpacks just the first value of the tuple into the variable tuberow
-        tuberow, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
-        return tuberow     
+        tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
+        return tuberow_index     
     except AssertionError: # This means ID was not valid, possibly a default key
         if len(tubeID) == 1 and tubeID in defaults.keys():
                 tubeID = defaults[tubeID] # Default
-                tuberow, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
-                return tuberow
+                tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
+                return tuberow_index
         else: 
             return -1
     except ValueError: # This means the ID is valid but not in the DB
         return -2 
         
-def filter_columns(tuberow):
+def filter_columns(tuberow_index):
     '''A tyical 'row' object for a given ID looks like:
        -------------------------------
        || tubeID          MSU05123 || 0
@@ -119,7 +128,7 @@ def filter_columns(tuberow):
        || None                None || 26
        || Name: 4407, dtype: object|| 
        -------------------------------''' 
-    fullrow = DB.iloc[tuberow]
+    fullrow = DB.iloc[tuberow_index]
     row = {"tubeID"           :    fullrow.tubeID,
 
            "Shipment_date"    :  fullrow.Received,
@@ -172,7 +181,7 @@ def format_values(row:dict):
     try: 
 
         T2_tension_delta = float(row["T2_tension_delta"])
-        T2_time_delta_string = int(row["T2_time_delta"][:-1])
+        T2_time_delta_string = int(row["T2_time_delta"][:-1]) # 13D --> 13
 
     except ValueError: 
 
@@ -205,12 +214,13 @@ def format_values(row:dict):
         DC_total_time = "00:00:00"
         DC_pass = False
     good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
-    print_list = [f"{tubeID}",
-                  f"{shipment_date_string: <10}", f"Bend: {Bend_flag: <12}",
-                  f"T1 on {T1_date} {T1_flag: <12} {T1_tension:0<7}g {T1_length :0<7}mm",
-                  f"T2 on {T2_date: <9} {T2_flag: <15} {T2_tension:0<7}g",
-                  f"DC on {DC_date} {DC_DC: >6}nA {DC_total_time: ^10} {DC_flag: >13}"]
-    return print_list, good_tube
+    value_dict = {"ID": tubeID,
+                  "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
+                  "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
+                  "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension,
+                  "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time, "DC_Flag": DC_flag}
+
+    return value_dict, good_tube
 
 def get_formatted_tuple(input_tubeID:str):
     tuberow = locate_tube_row(input_tubeID)
@@ -228,14 +238,20 @@ def get_formatted_tuple(input_tubeID:str):
 
     row = filter_columns(full_tuberow)
 
-    print_list, good_tube = format_values(row)
-    
+    value, good_tube = format_values(row)
+
+    print_list = [f"{value['ID']}",
+                  f"{value['Ship_Date']: <10}", 
+                  f"Bend: {value['Bend_Flag']: <12}",
+                  f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']:0<7}mm",
+                  f"T2 on {value['T2_Date']: <9} {value['T2_Flag']: <15} {value['T2_Tension']:0<7}g",
+                  f"DC on {value['DC_Date']} {value['DC_DC']: >6}nA {value['DC_Time']: ^10} {value['DC_Flag']: >13}"]
     if row["Final_flag"] == "YES" and good_tube:
         Final_flag = green_text(row["Final_flag"])
     else: 
         Final_flag = red_text(row["Final_flag"])
 
     print_list.append(f"Final: {Final_flag: <12}")
-    final_string:str = " | ".join(print_list)
+    final_string = " | ".join(print_list)
 
     return final_string, good_tube

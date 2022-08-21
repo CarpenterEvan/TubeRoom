@@ -16,9 +16,7 @@ for i in Processed_2022.glob("*"):
     for j in subfolder.glob("*test*.log"):
         processed.append(j)
 
-DC_Files = sorted(DC_path.glob("*test?.log") ) 
-
-
+DC_Files = sorted(DC_path.glob("*test*.log") ) 
 
 All_Files = DC_Files + processed
 
@@ -47,5 +45,5 @@ print("done with filling dictionary")
 
 full_list = [(GetTubeInfo.get_formatted_tuple(id)[0][11:21], id, d[id]) for id in d.keys()]
 
-df = pd.DataFrame(data=full_list, columns=["Date", "ID", "ndc"]).sort_values("Date").reset_index()
+df = pd.DataFrame(data=full_list, columns=["Date", "ID", "ndc"]).sort_values("Date").reset_index(drop=True)
 df.to_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")

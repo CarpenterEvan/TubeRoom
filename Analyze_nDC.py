@@ -23,7 +23,7 @@ df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 2022-04-26
 '''
 
-date = '2022-02-08'
+date = '2022-07-14'
 print(df)
 df["Date"] = pd.to_datetime(df["Date"])
 printdf = df["Date"].map(lambda x: x.strptime('%Y-%m-%d'))
