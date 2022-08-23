@@ -1,11 +1,14 @@
 import pathlib
 import sys
-from datetime import date
+import os.path
+from datetime import date, datetime
 from pathlib import Path
 from re import match
 
-import GetTubeInfo
+#import GetTubeInfo
 from GetTubeInfo import get_formatted_tuple
+
+
 
 __author__ = "Evan Carpenter"
 

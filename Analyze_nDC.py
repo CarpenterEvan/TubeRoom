@@ -12,6 +12,7 @@ df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 
 #date_list = ['2022-06-21']#, '2022-06-28', '2022-07-07', '2022-07-14']
 '''
+Run Get_nDC_IDs.py before this to get the list of Tube IDs from DC tests
 2022-07-14
 2022-07-07
 2022-06-28
@@ -24,10 +25,10 @@ df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 '''
 
 date = '2022-07-14'
-print(df)
-df["Date"] = pd.to_datetime(df["Date"])
-printdf = df["Date"].map(lambda x: x.strptime('%Y-%m-%d'))
-print(printdf)
+#print(df)
+#df["Date"] = pd.to_datetime(df["Date"])
+#printdf = df["Date"].map(lambda x: x.strptime('%Y-%m-%d'))
+#print(printdf)
 df_one_date = df[df["Date"]==date].reset_index()
 
 ndc_one_date = df_one_date["ndc"]
@@ -38,7 +39,13 @@ left_list = [0, 3, 105, 206]
 runs_list = range(1,max_num_treatments+2, 1)
 print(df_one_date[df_one_date["ndc"]>2].sort_values("ndc"))
 # I want to scale the width of the figure to be wider when there are many many tests, 
-figure_size = (max_num_treatments, 5) if max_num_treatments > 5 else (5,5) 
+if max_num_treatments < 5:
+        figure_size = (5,5)
+elif max_num_treatments <= 10:
+        figure_size = (8,5)
+elif max_num_treatments >10:
+        figure_size = (max_num_treatments,5)
+#figure_size = (max_num_treatments, 5) if max_num_treatments > 5 else (5,5) 
 # but when there are only 2-3 tests, I don't want the figure to be only 2-3 wide!!
 fig = plt.figure(figsize=figure_size, tight_layout=True)
 ax = fig.add_subplot(111,

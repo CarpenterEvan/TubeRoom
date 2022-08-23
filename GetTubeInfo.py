@@ -1,7 +1,7 @@
 __author__ = "Evan Carpenter"
 __version__ = "3.1"
 
-from os.path import getctime
+import os.path
 from re import match
 import pandas as pd
 from datetime import datetime, timedelta
@@ -9,7 +9,8 @@ from pathlib import Path
 
 home = Path.home()
 GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = Path.joinpath(Path("").absolute().parent, "Verifying", "TUBEDB.txt")
+path_to_local = Path.joinpath(Path("").absolute().parent, "TubeRoom/Verifying", "TUBEDB.txt")
+print(path_to_local)
 final_path = Path.joinpath(home, GDrive_to_DB)
 
 
@@ -20,7 +21,7 @@ red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
 flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
 
 def color_string(string, goal):
-    '''Colors a string green or red using ANSI escape codes depending on iff the string matches the goal'''
+    '''Colors a string green or red using ANSI escape codes depending on if the string matches the goal'''
     passes = match(string, goal)
     if passes:
         return (green_text(string), True)
@@ -33,7 +34,8 @@ def format_database():
         df = pd.read_csv(final_path, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
-                        memory_map = True)
+                        memory_map = True,
+                        dtype=str).dropna(axis=0)
         path_used = final_path
     except FileNotFoundError:
 
@@ -47,15 +49,14 @@ def format_database():
             df = pd.read_csv(path_to_local, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
-                        memory_map = True)
+                        memory_map = True,
+                        dtype=str).dropna(axis=0)
             path_used = path_to_local
         except FileNotFoundError:
             exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
     if __name__ == "GetTubeInfo":
         print(f"Database File is from: {path_used}")
-
-        print("Last Updated:", datetime.fromtimestamp(getctime(path_used)))
-
+        print(f"Last Updated:", datetime.fromtimestamp(os.path.getmtime(path_used)))
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
 
