@@ -10,7 +10,6 @@ from pathlib import Path
 home = Path.home()
 GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
 path_to_local = Path.joinpath(Path("").absolute().parent, "TubeRoom/Verifying", "TUBEDB.txt")
-print(path_to_local)
 final_path = Path.joinpath(home, GDrive_to_DB)
 
 
@@ -31,32 +30,42 @@ def color_string(string, goal):
 def format_database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
     try:
+
         df = pd.read_csv(final_path, 
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True,
                         dtype=str).dropna(axis=0)
         path_used = final_path
+
     except FileNotFoundError:
 
         print(f'''
         
-        1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt
-        2.) Trying local path {path_to_local}
-        
-        ''')
+              1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt
+              2.) Trying local path {path_to_local}  
+
+              ''')
+
         try: 
+
             df = pd.read_csv(path_to_local, 
-                        names = ["ID", "T1", "T2", "DC", "FV"],  
-                        delimiter = "|",
-                        memory_map = True,
-                        dtype=str).dropna(axis=0)
+                             names = ["ID", "T1", "T2", "DC", "FV"],  
+                             delimiter = "|",
+                             memory_map = True,
+                             dtype=str).dropna(axis=0)
+
             path_used = path_to_local
+
         except FileNotFoundError:
+
             exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
+
     if __name__ == "GetTubeInfo":
+
         print(f"Database File is from: {path_used}")
         print(f"Last Updated:", datetime.fromtimestamp(os.path.getmtime(path_used)))
+
     df = df.applymap(lambda string: " ".join(string.split()))
     df = df.applymap(lambda string: string.split(" "))
 
@@ -67,6 +76,7 @@ def format_database():
     FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment",   "None", "None"])
 
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
+
     return newdf
 
 DB = format_database()
@@ -79,15 +89,17 @@ def locate_tube_row(input_tubeID:str):
     global DB
     defaults = {"d": "MSU05123", # default (good)
                 "f": "MSU01341", # fails multiple tests
-                "b": "MSU00229"} # multiple tests missing--> "-----"
+                "b": "MSU00229"} # bad, multiple tests missing, good for testing "-----"
     tubeID = input_tubeID
     try:
         istube = match("MSU[0-9]{5}", tubeID) 
         assert istube # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
-        # "tuberow, " unpacks just the first value of the tuple into the variable tuberow
+        # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow
         tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
         return tuberow_index     
+
     except AssertionError: # This means ID was not valid, possibly a default key
+
         if len(tubeID) == 1 and tubeID in defaults.keys():
                 tubeID = defaults[tubeID] # Default
                 tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
@@ -157,13 +169,16 @@ def filter_columns(tuberow_index):
     return row
 
 def format_values(row:dict):
+
     tubeID = row["tubeID"]
     shipment_date_string = row["Shipment_date"].strip()
     shipment_date = datetime.strptime(shipment_date_string, "%Y-%m-%d")
+
     Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS")
     T1_flag, T1_passed = color_string(row["T1_flag"], "pass")
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
     DC_flag, DC_passed = color_string(row["DC_flag"], "OK")
+
     try:
         
         T1_date:str = row["T1_date"] # Date of UM Tension test, so technically the second tension test, this gets assigned to T2_date later
@@ -205,13 +220,16 @@ def format_values(row:dict):
     DC_DC = row["DC_DC"]
     DC_date = row["DC_date"]
     try: 
+
         DC_seconds = int(row["DC_seconds"])
         DC_hours = DC_seconds // 3600
         DC_pass:bool = (DC_hours>=4) and DC_passed
         DC_minutes = (DC_seconds - DC_hours * 3600) // 60
         DC_seconds = DC_seconds - DC_minutes * 60 - DC_hours * 3600
         DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}" 
+
     except ValueError:
+        
         DC_total_time = "00:00:00"
         DC_pass = False
     good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])

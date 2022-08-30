@@ -50,6 +50,8 @@ total_tested = int(sum(n[1:]))
 total_number = len(df["Tension"])
 for index, value in enumerate(n):
     num_tubes = int(value)
+    if num_tubes == 0:
+        continue
     percent_of_total = 100 * num_tubes / total_number
     ax.text(bin_centers[index], value,
             f"{num_tubes} ({percent_of_total:.2f}%)",

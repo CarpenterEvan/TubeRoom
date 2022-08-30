@@ -4,10 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 home = Path.home()
 GDrive_path = Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
-path_to_local = Path.joinpath(Path(__file__).absolute().parent, "DC")
+path_to_local = Path.joinpath(Path("").parent, "DC")
 
 
-df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
 
 
 #date_list = ['2022-06-21']#, '2022-06-28', '2022-07-07', '2022-07-14']
@@ -24,7 +23,7 @@ Run Get_nDC_IDs.py before this to get the list of Tube IDs from DC tests
 2022-04-26
 '''
 
-date = '2022-07-14'
+date = '2022-07-28'
 #print(df)
 #df["Date"] = pd.to_datetime(df["Date"])
 #printdf = df["Date"].map(lambda x: x.strptime('%Y-%m-%d'))
@@ -37,7 +36,7 @@ total_number = len(ndc_one_date)
 left_list = [0, 3, 105, 206]
 #num_graphs = len(date_list)
 runs_list = range(1,max_num_treatments+2, 1)
-print(df_one_date[df_one_date["ndc"]>2].sort_values("ndc"))
+print(df_one_date[df_one_date["ndc"]>1].sort_values("ndc"))
 # I want to scale the width of the figure to be wider when there are many many tests, 
 if max_num_treatments < 5:
         figure_size = (5,5)

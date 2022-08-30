@@ -16,6 +16,9 @@
             I write with "a" to append, to further minimize the possibility of overwriting data
 '''
 
+
+
+
 from os.path import exists
 
 from datetime import date, datetime
@@ -28,7 +31,6 @@ month = date.today().strftime("%m")
 day = date.today().strftime("%d")
 time = datetime.now().strftime("%H:%M:%S")
 in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I also need to name the file.
-
 '''
 2) ###########################################################################################
 '''
@@ -37,17 +39,23 @@ home = pathlib.Path.home()
 GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN")
 home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB) 
 
+
+
 if home_to_DB.exists():
     path_to_Google_or_Local_file = home_to_DB
 else:
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path(__file__).absolute().parent, "DC")
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path("").absolute(), "DC")
     print(f"\nCould not find Google Drive!") 
 
 file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()
 
-if file_exists==False and home_to_DB.exists():
+if (file_exists==False) and (home_to_DB.exists()):
     processed_file_exists = exists(pathlib.Path.joinpath(home_to_DB, f"Processed/CAENPS_{year}{month}{day}_test.log"))
     file_exists = processed_file_exists # True or False
+
+
+
+path_to_template = pathlib.Path.joinpath(pathlib.Path("").absolute(), "DC/_CAENPS_2022MMDD_template.log")
 
 try: 
     test_number = int(input("Test Number?: ")) if file_exists else ""
@@ -67,8 +75,8 @@ if operator == "stop":
     exit()
 
 print(f"Time:     {time}")
-print("--------Begin Scanning--------")
-print("     (type \x1b[37;5mstop\x1b[0m to exit)")
+print("--------Begin Scanning--------")   
+print("(type \x1b[37;5mstop\x1b[0m to finish)".center(40, " "))
 
 '''
 3) ###########################################################################################
@@ -80,18 +88,19 @@ while True:
     board_number = 4 if counter <= 23 else 1 
     this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
 
-    if this_tube == "stop" or this_tube == "MSU07373":
+    if (this_tube == "stop") or (this_tube == "MSU07373"):
         break
-    if this_tube not in ID_set:
+    if (this_tube not in ID_set):
         ID_set.add(this_tube)
         DC_tube_IDs.append(this_tube)
-    elif this_tube in ID_set:
+    elif (this_tube in ID_set):
         counter -= 1
     counter +=  1
+num_of_tubes = len(DC_tube_IDs)
 
-print(DC_tube_IDs)
-print(len(DC_tube_IDs))
+print(num_of_tubes)
 ID_string = " ".join(DC_tube_IDs)
+
 '''
 4) ###########################################################################################
 '''
@@ -109,14 +118,37 @@ elif finish != "y":
 '''
 path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
+def variable_length_mapping(string:str, number_of_spaces_between_values:int): 
+    '''
+    Sometimes you will only want to do DC runs in groups of 12, 24, or 36 tubes instead of 48, 
+    If you do a run with 12 tubes for example, you will have to use:
+    12 positions instead of 48 for MappingToBoards, HVpowerSupplyID, Pedestal(nA), HighVoltage(V), and DateTime
+
+    Instead of manually changing it whenever the need arises, this function will automatically set the correct length of values. 
+
+    string is the line (MappingToBoards, HVpowerSupplyID, etc..) and number_of_spaces_between_values is what it says, because the number of spaces between each HVpowerSupplyID is different from each Pedestal value. 
+    I would rather account for the variabile spaces instead of change the spacing on the template to be uniform because the only thing better than perfection is standardization. 
+    '''
+    beginning_info = string[0:16]
+    string_of_just_values = string[16:].strip(" \n") # strip out " " and "\n" with " \n"
+    list_of_values = string_of_just_values.split(" " * number_of_spaces_between_values)
+    correctly_sized_list = list_of_values[0:num_of_tubes] # num_of_tubes is defined later as the length of the list of IDs
+    string_with_correct_number_of_values = str(" "* number_of_spaces_between_values).join(correctly_sized_list)
+    return beginning_info + " " * number_of_spaces_between_values + string_with_correct_number_of_values + "\n"
+
+
 with open(path_to_template, 'r') as Template:
     with open(file_path, 'a') as Output:
         lines = Template.readlines()
         Output.writelines(lines[0])
         Output.writelines(lines[1].replace("Name", f"{operator}"))
         Output.writelines(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
-        Output.writelines(lines[3:14])
-        Output.writelines(lines[14][0:16]+ ID_string + "\n")
-        Output.writelines(lines[15])
+        Output.writelines(lines[3:10])
+        Output.writelines(variable_length_mapping(lines[10], 1)) # Excuse the boilerplate,
+        Output.writelines(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
+        Output.writelines(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
+        Output.writelines(variable_length_mapping(lines[13], 5))
+        Output.writelines(lines[14][0:16] + ID_string + "\n")
+        Output.writelines(variable_length_mapping(lines[15], 1))
 
 print("\n\n All Done! :) \n\n")

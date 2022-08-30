@@ -42,7 +42,7 @@ df_IMon = df_IMon["val"]
 df_IMon.resample('1s').mean().bfill()
 #df = df.drop(labels=["par", "Location"], axis="columns")
 #df = df.resample("1S", label="right").mean().fillna(method="ffill")
-print(df_IMon)
+print(df_IMon.mean())
 print("")
 
 

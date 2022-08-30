@@ -3,34 +3,28 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 import time
+import gzip
 
 home = Path.home()
 GDrive_path = Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
 DC_path = Path.joinpath(home, GDrive_path, "CAEN", "Processed")
 Processed_2022 = Path.joinpath(DC_path, "2022")
 
+
 processed = []
 
-for i in Processed_2022.glob("*"):
-    subfolder = Path.joinpath(Processed_2022, i)
-    for j in subfolder.glob("*test*.log"):
-        processed.append(j)
 
-DC_Files = sorted(DC_path.glob("*test*.log") ) 
 
-All_Files = DC_Files + processed
 
 path_to_local = Path.joinpath(Path("").absolute(), "DC")
 
-ID_list = []
-
+#ID_List = [open(file).readlines()[14][16:].strip("\n").strip(" ").split(" ") for file in All_Files] #46s
 start = time.time()
-
-for file in All_Files:
-    DC_File = open(file, "r")
-    ID_Line = DC_File.readlines()[14][16:].strip("\n").strip(" ")
-    ID_line_listed = ID_Line.split(" ")
-    ID_list += ID_line_listed
+ID_list = []
+for file in DC_path.glob("**/*test*.log"): 
+    print(file)
+    DC_File = open(file)
+    ID_list += DC_File.readlines()[14][16:].strip(" \n").split(" ")
     DC_File.close()
 
 d,s = dict(), set()
