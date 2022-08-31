@@ -25,7 +25,7 @@ df = pd.read_csv(path,
                              7: stripstring,
                              9: stripstring}
                 ).set_index("Datetime")
-print(df[df["val"]=="false"].index)
+print(df[df["val"]=="false"].index) # maybe dont index by datetime yet?
 df.drop(df[df["val"]=="false"].index)
 print(df[df["val"]=="false"].index)
 print(df["val"].astype(float)); exit()
