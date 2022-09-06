@@ -17,15 +17,14 @@ processed = []
 
 
 path_to_local = Path.joinpath(Path("").absolute(), "DC")
-
-#ID_List = [open(file).readlines()[14][16:].strip("\n").strip(" ").split(" ") for file in All_Files] #46s
 start = time.time()
+
 ID_list = []
-for file in DC_path.glob("**/*test*.log"): 
-    print(file)
-    DC_File = open(file)
-    ID_list += DC_File.readlines()[14][16:].strip(" \n").split(" ")
-    DC_File.close()
+for path in DC_path.glob("**/*test*.log"): 
+    with open(path, "r") as file: 
+        ID_list += [next(file) for x in range(16)][14][16:].strip(" \n").split(" ")
+    print(path)
+
 
 d,s = dict(), set()
 print("Done with stripping IDs")
@@ -40,10 +39,14 @@ for line in ID_list:
 print("Done with filling dictionary")
 #GetTubeInfo.get_formatted_tuple(id)[0][11:21] 74.11 s
 # filter_columns(locate_tube_row(id))["Shipment_date"] 38.59 s
-
-full_list = [(filter_columns(locate_tube_row(id))["Shipment_date"], id, d[id]) for id in d.keys()]
-
-print(time.time()-start)
+value = map(lambda id: (filter_columns(locate_tube_row(id))["Shipment_date"], id, d[id]), d.keys())
+print(value)
+#full_list = [(filter_columns(locate_tube_row(id))["Shipment_date"], id, d[id]) for id in d.keys()]
+#print(full_list)
+#with Path.joinpath(path_to_local, "IDOutput.txt").open("w") as output:
+#    for i in value:
+#        output.write(f"{i[0]}{i[1]}{i[2]}")
+exit(time.time()-start)
 
 df = pd.DataFrame(data=full_list, columns=["Date", "ID", "ndc"]).sort_values("Date").reset_index(drop=True)
 df.to_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")

@@ -10,6 +10,18 @@ stripstring = lambda x: x.strip(" [ ]; ]: ")
 date = "20220801"#input('Date:')
 path = Path.joinpath(Path.home(), f"Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN/Processed/CAENPS_{date}_test.log")
 
+
+with open(path, "r") as file: 
+    header = [next(file) for x in range(16)]
+nominal_voltage = int(header[9][17:].strip())
+mapping_to_boards = header[10][16:].strip(" \n").split(" ")
+HVpowerSupplyID = header[11][16:].strip(" \n").split("   ")
+Pedestal = " ".join(header[12][15:].split()).split(" ")
+ID_Mapping = header[14][16:].strip(" \n").split(" ")
+print(len(Pedestal))
+P4 = Pedestal[0:24]
+P1 = Pedestal[24:49]
+
 df = pd.read_csv(path,
                  skiprows=16,
                  delimiter=" ",
@@ -25,44 +37,50 @@ df = pd.read_csv(path,
                              7: stripstring,
                              9: stripstring}
                 ).set_index("Datetime")
-print(df[df["val"]=="false"].index) # maybe dont index by datetime yet?
-df.drop(df[df["val"]=="false"].index)
-print(df[df["val"]=="false"].index)
-print(df["val"].astype(float)); exit()
+df.drop(df[df["val"].str.contains("true|false")].index, inplace=True)
+df["val"] = df["val"].astype(float)
 df4 = df[df["bd"]=="4"].drop("bd", axis=1)
 df1 = df[df["bd"]=="1"].drop("bd", axis=1)
+#ch_n = 4
 
-ch_n = 1
+def bd4_ch_I(ch_n):
+    df4_n = df4[df4["ch"] == str(ch_n)]
+    df4_n.drop("ch", axis=1, inplace=True)
+    
+    df4_V = df4_n[df4_n["par"] == "VMon"].drop("par", axis=1, inplace=False)
+    
+    df4_V = df4_V[df4_V["val"].between(left=2897, right=2902)]
+    df4_V_first = df4_V.index[0]
+    print(df4_V_first)
+    df4_I = df4_n[df4_n["par"] == "IMon"].drop("par", axis=1, inplace=False)
 
-bd4_ch_n = df4[df4["ch"]==str(ch_n)].drop("ch", axis=1)
-bd4_ch_n_V = bd4_ch_n[bd4_ch_n["par"]=="VMon"]
-print(bd4_ch_n_V["val"]); exit(f"time taken: {time.time()-start:.2f} s")
+    df4_I = df4_I.applymap(lambda x: float(x)-float(Pedestal[ch_n])/100)
 
-df.dropna()
-dfnp = df.to_numpy()
-innp = df.index.to_numpy()
+    return df4_I
 
-print(dfnp)
+bd4 = []
+for chh in range(3):
+    print(bd4_ch_I(chh))
 
-#df = df.set_index("Datetime")
+exit(f"Time taken ≈ {time.time()-start:.4f}s")
+
+
+
 #df_time = df.resample("1S", label="left")
-#print(df_time)
-bd = "1-05"
-for i in range(48):
-    print(i)
-exit()
-print(df)
-df_VMon = df[(df["par"]=="VMon") & (df["Location"]==f"{bd}")].reset_index(drop=True)
-df_VMon = df_VMon.reset_index(drop=True)
-df_VMon = df_VMon.set_index("Datetime")
-df_VMon.resample('1s').mean().bfill()
+
+
+
+
+
 df_IMon = df[(df["par"]=="IMon") & (df["Location"]==f"{bd}")]
 df_IMon = df_IMon.reset_index(drop=True)
 df_IMon = df_IMon.set_index("Datetime")
 df_IMon = df_IMon["val"]
 df_IMon.resample('1s').mean().bfill()
+
 #df = df.drop(labels=["par", "Location"], axis="columns")
 #df = df.resample("1S", label="right").mean().fillna(method="ffill")
+
 print(df_IMon)
 print(df_VMon)
 

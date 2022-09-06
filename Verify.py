@@ -56,8 +56,12 @@ elif OrderedFile:
 
     file_name = f"Mod{module}_Multilayer{multilayer}_Layer{layer}.txt"
 
-    file_path = Path.joinpath(Path.home(), f"Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{module}", file_name)
-    print(file_path)
+    folder_path = Path.joinpath(Path.home(), f"Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{module}")
+    if not Path.exists(folder_path):
+        Path.mkdir(folder_path)
+    else: pass
+
+    file_path = Path.joinpath(folder_path, file_name)
 
     if Path.exists(file_path):
         exit(f"That file already exists at {file_path}! Do not overwrite!")
