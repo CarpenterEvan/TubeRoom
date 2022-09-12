@@ -1,9 +1,11 @@
 # Welcome to the UofM ATLAS Tube Room!!
-1.    If you're reading this, then I'm probably not in lab anymore, hello from ~beyond the grave~ wherever I am that's not here. 
-1.    During my time in the Tube Room, I learned a lot about experimentation, quality assurance, and most importantly, tubes!
-1.    I want to store the things I've learned so the next person that comes after me can have a slightly easer time. 
+## If you're reading this line, then everthing here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all a passion project, so don't judge! (too much). 
 
-[Why should I try and figure this out](#why)
+#### If you're reading this, then I'm probably not in lab anymore, hello from ~beyond the grave~ wherever I am that's not here. 
+
+#### Welcome to my documentation of what I have found in my time in the Tube Room. 
+
+[What you can learn from this](#why)
 
 [Testing Tubes](#testing)
 
@@ -22,23 +24,24 @@ graph LR;
     
 ```
 
-## <a name="why"> Why Should I try and figure this out  </a>
+## <a name="why"> What you can learn from this  </a>
+1.    During my time in the Tube Room, I learned a lot about experimentation, quality assurance, and most importantly, tubes!
+1.    I want to store the things I've learned so the next person that comes after me can have a slightly easer time. 
 1.    I've worked as:  
     *    Tube builder (summer of '21)    
     *    Secondary QA tester (fall/winter of '21-'22)    
-    *    Primary QA tester and lab manager (summer of '22)    
+    *    Primary QA tester and lab manager (summer, fall, winter '22-'23)    
 1.    I've done hours of tension tests, dark current tests, bend tests, and leak tests, I've picked up some helpful tips and tricks!
 1.    I also figured out how to use tools like Python, Bash, LabVIEW, and GitHub to make my life easier. 
 1.    I want to pass on this information so it is not lost after I leave, so your life can be easier too! 
 1.    When I started in lab, I had no knowledge of any of this, so I prefer to assume you have no knowledge either. If you know a better way to do something, try it out! You are either right or you have learned something new.
 
 ## <a name="testing"> Testing Tubes </a>
-The life-span of a PERFECT tube will go as follows: 
-1.    Tube is received from MSU
-1.    Tube is Bend Tested (BT)
-1.    Tube is Leak Tested (LT)
-1.    Tube's Tark Turrent is tested (DC)
-1.    The wire of the tube is Tension Tested (TT)
+Currently there are 4 quality assurance tests we perform on tubes recieved from MSU:
+###    Bend Tested (BT)
+###    Tube is Leak Tested (LT)
+###    Tube's Tark Turrent is tested (DC)
+###    The wire of the tube is Tension Tested (TT)
 
 
 ## Running Python Files  <a name="code"></a>
