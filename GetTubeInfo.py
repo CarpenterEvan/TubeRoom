@@ -232,14 +232,21 @@ def format_values(row:dict):
         
         DC_total_time = "00:00:00"
         DC_pass = False
-    good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
+    good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
+    #good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
     value_dict = {"ID": tubeID,
                   "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
                   "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
                   "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension,
                   "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time, "DC_Flag": DC_flag}
 
-    return value_dict, good_tube
+    return value_dict, good_tube_dict
+
+def id_to_values(input_tubeID:str):
+    tuberow_index = locate_tube_row(input_tubeID)
+    row = filter_columns(tuberow_index)
+    value_dict, good_tube_dict = format_values(row)
+    return value_dict, good_tube_dict
 
 def get_formatted_tuple(input_tubeID:str):
     tuberow = locate_tube_row(input_tubeID)
@@ -257,7 +264,8 @@ def get_formatted_tuple(input_tubeID:str):
 
     row = filter_columns(full_tuberow)
 
-    value, good_tube = format_values(row)
+    value, good_tube_dict = format_values(row)
+    good_tube = all(good_tube_dict.values())
 
     print_list = [f"{value['ID']}",
                   f"{value['Ship_Date']: <10}", 

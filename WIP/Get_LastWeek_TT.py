@@ -37,14 +37,18 @@ for file in processed_folder.glob("*.log"):
 
 fig = plt.figure(figsize=(8,5), tight_layout=True)
 ax = fig.add_subplot(111,
-                     title=f"Tension tests performed between {week_ago: %Y/%m/%d}-{today: %Y/%m/%d}", 
+                     title=f"Tension Tests Performed Between {week_ago:%Y/%m/%d}-{today:%Y/%m/%d}", 
                      xlabel="Tension (g)",
-                     ylabel="Number of tubes",
+                     ylabel="Number of Tubes",
                      aspect="auto")
 
-n, bins, patches = ax.hist(df["Tension"], bins=[325,335,345,355,365,375,385,395])
+n, bins, patches = ax.hist(df["Tension"], bins=range(320,410,10))# so bins= [325,335,345,355,365,375,385,395]
 
 bin_centers = [(patch._x0 + patch._x1)/2 for patch in patches]
+
+number_under = len(df[(df["Tension"]<325)])
+number_over =  len(df[(df["Tension"]>380)])
+
 print(df[(df["Tension"]<325) | (df["Tension"]>380)][["Operator", "Date", "tubeID","Tension"]])
 total_tested = int(sum(n[1:]))
 total_number = len(df["Tension"])
@@ -53,13 +57,23 @@ for index, value in enumerate(n):
     if num_tubes == 0:
         continue
     percent_of_total = 100 * num_tubes / total_number
-    ax.text(bin_centers[index], value,
-            f"{num_tubes} ({percent_of_total:.2f}%)",
-            color="r", 
-            horizontalalignment='center', 
+    a = ax.text(bin_centers[index], value,
+            f"{num_tubes} ({percent_of_total:.1f}%)",
+            size=10,
+            color="red", 
+            horizontalalignment="center", 
             verticalalignment="bottom")
+
+            
 ax.text(0.25, 0.7, f"Total tested: {total_number}", 
         horizontalalignment="center",
         transform=ax.transAxes)
+ax.text(0.25, 0.6, f"Under 325g: {number_under} tube(s)",
+        horizontalalignment="center",
+        transform=ax.transAxes)
+ax.text(0.25, 0.55, f"  Over 380g: {number_over} tube(s)",
+        horizontalalignment="center", 
+        transform=ax.transAxes)
+
 ax.set_xticks(bins)
 plt.show()

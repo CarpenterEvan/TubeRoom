@@ -52,7 +52,7 @@ def bd4_ch_I(ch_n):
     df4_V = df4_V[df4_V["val"].between(left=2897, right=2902)]
     df4_V_first = df4_V.index[0]
     print(df4_V_first)
-    df4_I = df4_n[df4_n["par"] == "IMon"].drop("par", axis=1, inplace=False)
+    df4_I = df4_n[df4_n["par"] == "IMon"].drop("par", axis=1, inplace=False).loc[df4_V_first:]
 
     df4_I = df4_I.applymap(lambda x: float(x)-float(Pedestal[ch_n])/100)
 

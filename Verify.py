@@ -5,7 +5,6 @@ from datetime import date, datetime
 from pathlib import Path
 from re import match
 
-#import GetTubeInfo
 from GetTubeInfo import get_formatted_tuple
 
 
