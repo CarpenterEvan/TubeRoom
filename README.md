@@ -1,5 +1,5 @@
 # Welcome to the UofM ATLAS Tube Room!!
-## If you're reading this line, then everthing here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all a passion project, so don't judge! (too much). 
+## If you're reading this line, then everthing here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all done when I have free time, so don't judge! (too much). Ok here is the rest of the file:
 
 #### If you're reading this, then I'm probably not in lab anymore, hello from ~beyond the grave~ wherever I am that's not here. 
 
@@ -11,18 +11,6 @@
 
 [Running Python Files](#why)
 
-```mermaid
-
-graph LR;
-        
-    MSU-->UM;
-
-    UM-->|pass|BT-->|pass|LT-->|pass|DC-->|pass|TT-->|pass|High_Bay!!;
-    Treatment-->DC;
-    DC-->|fail|Treatment;
-    BT & LT & TT-->|fail|Graveyard;
-    
-```
 
 ## <a name="why"> What you can learn from this  </a>
 1.    During my time in the Tube Room, I learned a lot about experimentation, quality assurance, and most importantly, tubes!
