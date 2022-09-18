@@ -34,6 +34,7 @@ Currently there are 4 quality assurance tests we perform on tubes recieved from 
 
 ## Running Python Files  <a name="code"></a>
 1.    This GitHub repository is full of files that help with different processses I did every day that are just sped up using python.
+1.    Anything not in the Work-In-Progress (WIP) folder should work just fine. Anything in the WIP folder... might not. 
 1.    This code is still for lab use, meaning you'll need access to the lab's Google Drive. Get someone to add you to the google drive, if you can't find anyone else to add you (impossible) email me `ecarp@umich.edu`.
 1.    I run these files from the command-line.
 1. I personally reccomend, downloading the python package manager (so you don't have to individually install numpy, matplotlib.pyplot, scipy, pandas, ...) that is optomized for data science: [Anaconda](https://www.anaconda.com/). If you have your own installation of python that you like better, then use that! 
@@ -51,8 +52,9 @@ I will be doing this for thousands of tubes, so I want it to be quick, easy, and
 
 ###    `DCHeader.py` 
 I want to create a new .log file that will be synced with the google drive. It must be labeled with the correct date, 
-and if a file already already exists for that day, it will have to modify the name. This code can only handle 2 tests/day right now. 
-The other important feature is scanning in the tube IDs. 
+and if a file already already exists for that day, it will have to modify the name. "...test.log" --> "...test2.log" for example.
+
+The other important feature is scanning in the tube IDs.
 
 ###   `TensionSearch.sh`
 Using bash, grep through the tension files in the Google Drive and see if a tube's ID appears in any tension files, this can be used for checking if a tube has been tension tested before the database has been updated. 
