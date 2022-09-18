@@ -36,15 +36,15 @@ in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I 
 '''
 
 home = pathlib.Path.home()
-GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports/CAEN")
+GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
 home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB) 
-
+local_DC_folder = pathlib.Path("").absolute()
 
 
 if home_to_DB.exists():
-    path_to_Google_or_Local_file = home_to_DB
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(home_to_DB, "CAEN")
 else:
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(pathlib.Path("").absolute(), "DC")
+    path_to_Google_or_Local_file = pathlib.Path.joinpath(local_DC_folder, "DC")
     print(f"\nCould not find Google Drive!") 
 
 file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()
@@ -55,13 +55,15 @@ if (file_exists==False) and (home_to_DB.exists()):
 
 
 
-path_to_template = pathlib.Path.joinpath(pathlib.Path("").absolute(), "DC/_CAENPS_2022MMDD_template.log")
+
+path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
 try: 
     test_number = int(input("Test Number?: ")) if file_exists else ""
 except ValueError:
     print(" \n\n Test Number must be a number, it is the number at end of the .log file \n 'CAENPS_20220707_test\x1b[32m2\x1b[0m.log' for example \n\n ")
     exit() 
+
 
 # "\x1b[32m;5m this text is green \x1b[0m"
 
@@ -77,35 +79,53 @@ if operator == "stop":
 print(f"Time:     {time}")
 print("--------Begin Scanning--------")   
 print("(type \x1b[37;5mstop\x1b[0m to finish)".center(40, " "))
+print("(type \x1b[37;5mped\x1b[0m for pedestal)".center(40, " "))
 
 '''
 3) ###########################################################################################
 '''
+
 counter = 0
 DC_tube_IDs = []
 ID_set = set()
-while True:
-    board_number = 4 if counter <= 23 else 1 
-    this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
-
-    if (this_tube == "stop") or (this_tube == "MSU07373"):
-        break
+def add_tube_to_list(this_tube):
+    global counter
     if (this_tube not in ID_set):
         ID_set.add(this_tube)
         DC_tube_IDs.append(this_tube)
     elif (this_tube in ID_set):
         counter -= 1
     counter +=  1
+while True:
+    board_number = 4 if counter <= 23 else 1 
+    this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
+
+
+    if this_tube == "ped":
+        new_file_name = f"CAENPS_{year}{month}{day}_Pedestal.log"
+
+        file_path = pathlib.Path.joinpath(path_to_Google_or_Local_file, new_file_name)
+        
+        for i in range(1,49):
+            this_tube = f"MSU{i:0>5}"
+            print(this_tube)
+            add_tube_to_list(this_tube)
+        this_tube = "stop"
+        print(f"Now saving to: {file_path.parent}/\x1b[32m{new_file_name}\x1b[0m")
+
+    if (this_tube == "stop") or (this_tube == "MSU07373"):
+        break
+    add_tube_to_list(this_tube)
 num_of_tubes = len(DC_tube_IDs)
 
-print(num_of_tubes)
+print(f"Number of tubes: {num_of_tubes}")
 ID_string = " ".join(DC_tube_IDs)
 
 '''
 4) ###########################################################################################
 '''
 
-finish = input("Finish? [y/n]: ")
+finish = input("Finish and Write File? [y/n]: ")
 
 if finish == "y" or finish == "MSU07373":
     pass
@@ -116,7 +136,6 @@ elif finish != "y":
 '''
 4) ###########################################################################################
 '''
-path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
 def variable_length_mapping(string:str, number_of_spaces_between_values:int): 
     '''
@@ -148,7 +167,7 @@ with open(path_to_template, 'r') as Template:
         Output.writelines(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
         Output.writelines(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
         Output.writelines(variable_length_mapping(lines[13], 5))
-        Output.writelines(lines[14][0:16] + ID_string + "\n")
+        Output.writelines(lines[14][0:17] + ID_string + "\n")
         Output.writelines(variable_length_mapping(lines[15], 1))
 
 print("\n\n All Done! :) \n\n")

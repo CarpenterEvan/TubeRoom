@@ -45,6 +45,7 @@ v.get_patch_by_id("011").set_color("orange")
 v.get_patch_by_id("101").set_color("orange")
 
 v.get_patch_by_id("111").set_color("green")
+
 from datetime import datetime
 today = datetime.strftime(datetime.now(), "%Y-%m-%d")
 

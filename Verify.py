@@ -1,3 +1,4 @@
+from imghdr import tests
 import pathlib
 import sys
 import os.path
@@ -13,15 +14,17 @@ __author__ = "Evan Carpenter"
 
 counter = 0
 
-good_dict, bad_dict = dict(), dict()
-good_set, bad_set = set(), set()
-
 WriteFile = ("save" in sys.argv) or ("record" in sys.argv) # This is just to record the tubes scanned to a file
 OrderedFile = ("ordered" in sys.argv and not WriteFile) # For recording the order of tubes before they get glued into module
 CheckFile = ("check" in sys.argv) # going through a file of tubes and putting them through the main function
 SearchFor = ("search" in sys.argv) # searching for certain tubes, pritns a bell return when it's found
 
 def write_tube_to_file_or_append_to_ordered_list(tubeid):
+    '''This adds a line to the written file or adds a tube to the ordered file. 
+    I keep the ordered version as a list so it can be reversed in order at the end. 
+    This can also be done with a file, but if there is an error in the scanning during a write file, I want to save the intermediate output, 
+    wheras the ordered file should be made all at once with no interruption--> 
+    an error should not result in a partially complete file, it should result in no file.'''
     if WriteFile:
         VerifiedIDs.writelines(tubeid)
     elif OrderedFile:
@@ -72,70 +75,81 @@ else:
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
 
 
+tests_summary_dictionary = {"Bend":0,  
+                            "T1":0, 
+                            "T2":0, 
+                            "DC":0,
+					        "total":0}
 
+
+def add_to_summary_dictionaries(date_string, good_tube_dict):
+    global dates_summary_dictionary, tests_summary_dictionary
+
+    if date_string not in dates_summary_dictionary.keys():
+        dates_summary_dictionary[date_string] = 0
+    else: pass
+    
+
+    for i in good_tube_dict.keys():
+        if good_tube_dict[i] == True:
+            tests_summary_dictionary[i] += 1
+        else: pass
+    dates_summary_dictionary[date_string] += 1
+    tests_summary_dictionary["total"] += 1
+    
+    
+    
+
+
+dates_summary_dictionary, tubeID_set = dict(), set()
 
 def main(inputs):
-    global good_dict, good_set, bad_dict, bad_set, counter # I use this dictionary and set to filter out duplicates
+    global dates_summary_dictionary, tubeID_set, counter # I use this dictionary and set to filter out duplicates
     tubeid = inputs
 
-    if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "SAL"]:
+    if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]:
         spacer  = "--------------"
         finish_writing_files()
 
         print("\n" + spacer)
 
-        for i in sorted(good_dict):
-            print(i, good_dict[i])
-        print("Total OK: ", sum(good_dict.values()))
+        for i in sorted(dates_summary_dictionary):
+            print(i, dates_summary_dictionary[i])
+        print("Total: ", sum(dates_summary_dictionary.values()))
 
         print(spacer)
-
-        for i in sorted(bad_dict):
-            print(i, bad_dict[i])
-        print("Total Bad:", sum(bad_dict.values()))
-
-        print(spacer*2)
-
-        total_dict = {**good_dict, **bad_dict}
-        for i in sorted(total_dict):
-            print(f"{i} {total_dict[i]}")
-        print(f"Total All: {sum(total_dict.values())} «")
-        print(spacer)
+        #total = tests_summary_dictionary['total']
+        #for i in sorted(tests_summary_dictionary)[:-1]:
+        #    print(f"Passed {i: ^4} test: {tests_summary_dictionary[i]}  |  Failed/Need {i: ^4} test: {total - tests_summary_dictionary[i]}")
+        #print(f"Total Scanned: {total} «")
+        #print(spacer)
         exit("\n All done! :) \n")
     else: pass
 
     counter = counter + 1  if counter<=9 else 1
     counter = counter if len(tubeid)!=0 else 0 # this is so you can hit enter (which is input as "") to reset the counter
 
-    verify_string, good_tube = get_formatted_tuple(tubeid)
+    verify_string, good_tube_dict = get_formatted_tuple(tubeid)
+    if len(good_tube_dict) == 1:
+        counter = 0
+        
+    good_tube = all(good_tube_dict.values())
 
     date_string = verify_string[11:21]
     not_dashes = match("[0-9]{4}-[0-9]{2}-[0-9]{2}", date_string) != None 
-    good_tube = True
-    if (good_tube) and (not_dashes):
-        d = good_dict
-        s = good_set
-    elif (not good_tube) and (not_dashes):
-        d = bad_dict
-        s = bad_set
-    else: 
-        dashes_dict = dict()
-        dashes_set = set()
-        d, s = dashes_dict, dashes_set
+
+
     #This should be self consistent looking for duplicates in the good/bad dictionary because a tube that is bad on first scan won't update to good while the program is running
-    if (date_string not in d.keys()): 
-        s.add(tubeid) 
+
+    if not_dashes and tubeid not in tubeID_set:
+        tubeID_set.add(tubeid)
+        add_to_summary_dictionaries(date_string, good_tube_dict)
         write_tube_to_file_or_append_to_ordered_list(tubeid)
-        d[date_string] = 1
-    elif (tubeid not in s):
-        s.add(tubeid)
-        write_tube_to_file_or_append_to_ordered_list(tubeid)
-        d[date_string] += 1
 
     print("", end="\033[1A")
+    
     print(verify_string, 
           counter if counter!=0 else "")
-
     if counter == 10:
         print("-"*166)
     return tubeid

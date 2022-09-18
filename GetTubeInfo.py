@@ -1,6 +1,13 @@
 __author__ = "Evan Carpenter"
 __version__ = "3.1"
 
+
+
+#
+#
+# Fix the delta T2, most recent value is used for T1 
+#
+#
 import os.path
 from re import match
 import pandas as pd
@@ -198,14 +205,15 @@ def format_values(row:dict):
 
         T2_tension_delta = float(row["T2_tension_delta"])
         T2_time_delta_string = int(row["T2_time_delta"][:-1]) # 13D --> 13
-
+    # Map out tension logging!!!!
     except ValueError: 
 
-        T2_tension_delta =  -T1_tension
+        T2_tension_delta =  -T1_tension 
         T2_time_delta_string = int(0)
 
     T2_time_delta = timedelta(days = T2_time_delta_string)
-    T2_tension = round(T1_tension + T2_tension_delta , 3)
+    T2_tension = round(T1_tension , 3)
+    T1_tension = round(T2_tension - T2_tension_delta, 3)
 
     if shipment_date < T1_datetime and timedelta(days=0) < T2_time_delta: 
 
@@ -243,6 +251,7 @@ def format_values(row:dict):
     return value_dict, good_tube_dict
 
 def id_to_values(input_tubeID:str):
+    '''Quick and easy use of functions to return unformatted dictionaries of values.'''
     tuberow_index = locate_tube_row(input_tubeID)
     row = filter_columns(tuberow_index)
     value_dict, good_tube_dict = format_values(row)
@@ -252,11 +261,19 @@ def get_formatted_tuple(input_tubeID:str):
     tuberow = locate_tube_row(input_tubeID)
 
     filler_string = "-"*166
-    error_string = f"The ID '{input_tubeID}' either does not exist or is not in the database yet :("
+    
+    error_string = " | ".join([f"{input_tubeID}", 
+                                "----------", 
+                                "Bend: ----", 
+                                "T1 on -------- ---- ---.---g ----.--mm", 
+                                "T2 on --------  -----  ---.---g", 
+                                "DC on -------- ---.--nA  --:--:--   ---", 
+                                "Final: --- "])
+    #f"The ID '{input_tubeID}' either does not exist or is not in the database yet :("
     if tuberow == -1:
-        return filler_string, False
+        return filler_string, {"filler": False}
     elif tuberow == -2:
-        return error_string, False
+        return error_string, {"filler": False}
     else: 
         pass
 
@@ -280,5 +297,4 @@ def get_formatted_tuple(input_tubeID:str):
 
     print_list.append(f"Final: {Final_flag: <12}")
     final_string = " | ".join(print_list)
-
-    return final_string, good_tube
+    return final_string, good_tube_dict
