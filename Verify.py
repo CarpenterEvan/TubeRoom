@@ -1,4 +1,4 @@
-from imghdr import tests
+
 import pathlib
 import sys
 import os.path

@@ -1,13 +1,6 @@
 __author__ = "Evan Carpenter"
-__version__ = "3.1"
+__version__ = "4.0"
 
-
-
-#
-#
-# Fix the delta T2, most recent value is used for T1 
-#
-#
 import os.path
 from re import match
 import pandas as pd
@@ -22,9 +15,10 @@ final_path = Path.joinpath(home, GDrive_to_DB)
 
 '''This is a module designed to take in the ID of an sMDT barcode and not only find it in the TUBEDB.txt file, 
 which is stored in the Google Drive, but to format the values so that the result is easy to read'''
-green_text  = lambda x: f"\x1b[32m{x}\x1b[0m" # It seems that this adds +9 to length of string
-red_text    = lambda x: f"\x1b[31m{x}\x1b[0m"
-flashing_red= lambda x: f"\x1b[31;5m{x}\x1b[0m"
+green_text  = lambda x: f'\x1b[32m{x}\x1b[0m' # It seems that this adds +9 to length of string
+red_text    = lambda x: f'\x1b[31m{x}\x1b[0m'
+white_text  = lambda x: f'\x1b[39m{x}\x1b[0m'
+flashing_red= lambda x: f'\x1b[31;5m{x}\x1b[0m'
 
 def color_string(string, goal):
     '''Colors a string green or red using ANSI escape codes depending on if the string matches the goal'''
@@ -175,6 +169,67 @@ def filter_columns(tuberow_index):
            "Final_flag"       :        fullrow.ok}
     return row
 
+def format_tension(row):
+    try:
+        
+        T1_date = row["T1_date"] 
+        T1_tension  = float(row["T1_tension"])
+        T1_length   = float(row["T1_length"])
+        valid_T1_string = True
+    except ValueError:
+        
+        T1_date = "01-01-01"
+        T1_tension  = 0.
+        T1_length   = 0.
+        valid_T1_string = False
+        
+    try:
+
+        T2_tension_delta = float(row["T2_tension_delta"])
+        T2_time_delta = int(row["T2_time_delta"][:-1]) # 13D --> 13
+        valid_T2_string = True
+
+    except ValueError: 
+
+        T2_tension_delta =  0.
+        T2_time_delta = 0
+        valid_T2_string = False
+
+    T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
+    T2_datetime_delta = timedelta(days = T2_time_delta)
+
+    if valid_T1_string and valid_T2_string: 
+        # Both measurements are done, 
+        # this means the most recent tension test is in the T1 spot, 
+        # and it's difference in time and tension are in the T2 spot. 
+        # We need to subtract this difference to see the "true" T1, the test before the most recent one. 
+
+        T2_date = datetime.strftime(T1_datetime, "%y-%m-%d")
+        T2_tension = round(T1_tension,3)
+
+        T1_date = datetime.strftime(T1_datetime - T2_datetime_delta, "%y-%m-%d")
+        T1_tension = round(T1_tension - T2_tension_delta, 3)
+    
+        
+
+    elif valid_T1_string and not valid_T2_string:
+        # Only first measurement is taken, 
+        # we don't have any deltas, so no subtraction for T1, and T2 is null
+
+        T1_date = datetime.strftime(T1_datetime, "%y-%m-%d")
+        T1_tension = T1_tension
+
+        T2_date = "--------"
+        T2_tension = "-------"
+        T2_datetime_delta = datetime.today()-T1_datetime # If no T2 delta, then see how long it has been waiting
+
+    else: 
+        T1_date = "--------"
+        T1_tension = "-------"
+        T2_date = "--------"
+        T2_tension = "-------"
+
+    return T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_datetime_delta.days
 def format_values(row:dict):
 
     tubeID = row["tubeID"]
@@ -186,47 +241,14 @@ def format_values(row:dict):
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
     DC_flag, DC_passed = color_string(row["DC_flag"], "OK")
 
-    try:
-        
-        T1_date:str = row["T1_date"] # Date of UM Tension test, so technically the second tension test, this gets assigned to T2_date later
-        T1_tension  = float(row["T1_tension"])
-        T1_length   = float(row["T1_length"])
 
-    except ValueError:
-        
-        T1_date = "01-01-01"
-        T1_tension  = 0.
-        T1_length   = 0.
+    T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_days_delta = format_tension(row)
 
-    T1_datetime = datetime.strptime(T1_date, "%y-%m-%d")
-    # I keep these seperate because it has been the case where there is no T1 and there is a T2
-    # putting the two try/except blocks together would drop an error on no T1 and ignore the T2
-    try: 
-
-        T2_tension_delta = float(row["T2_tension_delta"])
-        T2_time_delta_string = int(row["T2_time_delta"][:-1]) # 13D --> 13
-    # Map out tension logging!!!!
-    except ValueError: 
-
-        T2_tension_delta =  -T1_tension 
-        T2_time_delta_string = int(0)
-
-    T2_time_delta = timedelta(days = T2_time_delta_string)
-    T2_tension = round(T1_tension , 3)
-    T1_tension = round(T2_tension - T2_tension_delta, 3)
-
-    if shipment_date < T1_datetime and timedelta(days=0) < T2_time_delta: 
-
-        T2_date = T1_date # Our T1 is the second tension test, so I want to call it T2
-        T1_date = datetime.strftime(T1_datetime - T2_time_delta, "%y-%m-%d")
-
-    else: 
-
-        T2_date = "--------"
-    
+    T2_days_delta = red_text(T2_days_delta) if T2_days_delta < 14 else white_text(T2_days_delta)
 
     DC_DC = row["DC_DC"]
     DC_date = row["DC_date"]
+
     try: 
 
         DC_seconds = int(row["DC_seconds"])
@@ -240,22 +262,18 @@ def format_values(row:dict):
         
         DC_total_time = "00:00:00"
         DC_pass = False
+
     good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
     #good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
     value_dict = {"ID": tubeID,
                   "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
                   "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
-                  "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension,
+                  "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension, "T2_time_delta": T2_days_delta, 
                   "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time, "DC_Flag": DC_flag}
 
     return value_dict, good_tube_dict
 
-def id_to_values(input_tubeID:str):
-    '''Quick and easy use of functions to return unformatted dictionaries of values.'''
-    tuberow_index = locate_tube_row(input_tubeID)
-    row = filter_columns(tuberow_index)
-    value_dict, good_tube_dict = format_values(row)
-    return value_dict, good_tube_dict
+
 
 def get_formatted_tuple(input_tubeID:str):
     tuberow = locate_tube_row(input_tubeID)
@@ -288,7 +306,7 @@ def get_formatted_tuple(input_tubeID:str):
                   f"{value['Ship_Date']: <10}", 
                   f"Bend: {value['Bend_Flag']: <12}",
                   f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']:0<7}mm",
-                  f"T2 on {value['T2_Date']: <9} {value['T2_Flag']: <15} {value['T2_Tension']:0<7}g",
+                  f"T2 on {value['T2_Date']: <9}(∆{value['T2_time_delta']: >12}) {value['T2_Flag']: <15} {value['T2_Tension']:0<7}g",
                   f"DC on {value['DC_Date']} {value['DC_DC']: >6}nA {value['DC_Time']: ^10} {value['DC_Flag']: >13}"]
     if row["Final_flag"] == "YES" and good_tube:
         Final_flag = green_text(row["Final_flag"])
@@ -298,3 +316,11 @@ def get_formatted_tuple(input_tubeID:str):
     print_list.append(f"Final: {Final_flag: <12}")
     final_string = " | ".join(print_list)
     return final_string, good_tube_dict
+
+
+def id_to_values(input_tubeID:str):
+    '''Quick and easy use of functions to return unformatted dictionaries of values.'''
+    tuberow_index = locate_tube_row(input_tubeID)
+    row = filter_columns(tuberow_index)
+    value_dict, good_tube_dict = format_values(row)
+    return value_dict, good_tube_dict

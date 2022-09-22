@@ -1,4 +1,3 @@
-import GetTubeInfo
 from pathlib import Path
 import pandas as pd 
 import matplotlib.pyplot as plt
@@ -6,6 +5,9 @@ home = Path.home()
 GDrive_path = Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
 path_to_local = Path.joinpath(Path("").parent, "DC")
 
+
+df = pd.read_csv(Path.joinpath(path_to_local, "IDOutput.txt"), sep=",")
+df = pd.read_pickle(Path.joinpath(path_to_local,"../", "IDOutput.pickle"))
 
 
 

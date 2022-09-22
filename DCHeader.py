@@ -16,79 +16,94 @@
             I write with "a" to append, to further minimize the possibility of overwriting data
 '''
 
-
-
-
-from os.path import exists
-
 from datetime import date, datetime
-import pathlib
-'''
-1) ###########################################################################################
-'''
-year = date.today().strftime("%Y")
-month = date.today().strftime("%m")
-day = date.today().strftime("%d")
-time = datetime.now().strftime("%H:%M:%S")
-in_file_date = f"{year}-{month}-{day}" # I use separate variable here because I also need to name the file.
-'''
-2) ###########################################################################################
-'''
+from os import path
+in_file_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # ex. 2022-09-07 09:47:06
+date_for_file_name = date.today().strftime("%Y%m%d")   # ex. 20220927
 
-home = pathlib.Path.home()
-GDrive_to_DB = pathlib.Path("Google Drive/Shared drives/sMDT Tube Testing Reports")
-home_to_DB = pathlib.Path.joinpath(home, GDrive_to_DB) 
-local_DC_folder = pathlib.Path("").absolute()
+home = path.expanduser("~")
+GDrive_to_DB = path.relpath("Google Drive/Shared drives/sMDT Tube Testing Reports")
+home_to_DB = path.join(home, GDrive_to_DB) 
+home_to_processed = path.join(home_to_DB, "Processed")
 
-
-if home_to_DB.exists():
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(home_to_DB, "CAEN")
+if path.exists(home_to_DB):
+    path_to_Google_or_Local_file = path.join(home_to_DB, "CAEN")
 else:
-    path_to_Google_or_Local_file = pathlib.Path.joinpath(local_DC_folder, "DC")
     print(f"\nCould not find Google Drive!") 
+    path_to_Google_or_Local_file = path.join(path.abspath(""), "DC")
 
-file_exists = pathlib.Path.joinpath(path_to_Google_or_Local_file, f"CAENPS_{year}{month}{day}_test.log").exists()
-
-if (file_exists==False) and (home_to_DB.exists()):
-    processed_file_exists = exists(pathlib.Path.joinpath(home_to_DB, f"Processed/CAENPS_{year}{month}{day}_test.log"))
-    file_exists = processed_file_exists # True or False
+path_to_template = path.join(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
 
 
 
-path_to_template = pathlib.Path.joinpath(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
+file_name = f"CAENPS_{date_for_file_name}_test.log"
 
-try: 
-    test_number = int(input("Test Number?: ")) if file_exists else ""
-except ValueError:
-    print(" \n\n Test Number must be a number, it is the number at end of the .log file \n 'CAENPS_20220707_test\x1b[32m2\x1b[0m.log' for example \n\n ")
-    exit() 
+def check_if_file_exists(file_name):
+    
+    file_exists = path.exists(path.join(path_to_Google_or_Local_file, file_name))
+
+    if (file_exists==False) and (path.exists(home_to_DB)): # check if there is a file for today and it is just in the Processsed folder.
+        processed_file = path.join(home_to_processed, file_name)
+        processed_file_exists = path.exists(processed_file)
+        file_exists = processed_file_exists
+
+    return file_exists
+
+def get_test_number(file_name):
+
+    global test_number
+
+    file_exists = check_if_file_exists(file_name)
+
+    if file_exists:
+        try: 
+            test_number = int(input("Test Number?: "))
+        except ValueError:
+            exit(" \n\n Test Number must be a number, it is the number at end of the .log file \n 'CAENPS_20220707_test\x1b[32m2\x1b[0m.log' for example \n\n ")
+            # "\x1b[32m;5m this text is green \x1b[0m"
+
+        new_file_name = f"CAENPS_{date_for_file_name}_test{test_number}.log"
+        new_file_exists = check_if_file_exists(new_file_name)
+
+        if new_file_exists:
+            print("That file exists! Try again")
+            new_file_name = get_test_number(new_file_name) ###
+
+    else: # so no file has been found
+        test_number = ""
+        new_file_name = file_name ###
+        
+    return new_file_name
 
 
-# "\x1b[32m;5m this text is green \x1b[0m"
+if check_if_file_exists(file_name)==True:
+    new_file_name = get_test_number(file_name)
+    file_name = new_file_name
+else: 
+    file_name = file_name
 
-new_file_name = f"CAENPS_{year}{month}{day}_test{test_number}.log"
 
-file_path = pathlib.Path.joinpath(path_to_Google_or_Local_file, new_file_name)
-print(f"Saving to: {file_path.parent}/\x1b[32m{new_file_name}\x1b[0m")
+file_path = path.join(path_to_Google_or_Local_file, file_name)
+
+print(f"\nSaving to: {path.dirname(file_path)}/\x1b[32m{file_name}\x1b[0m")
 
 operator = input("Operator: ")
 if operator == "stop":
     exit()
 
-print(f"Time:     {time}")
+print(f"Date/time: {in_file_date}\n")
 print("--------Begin Scanning--------")   
 print("(type \x1b[37;5mstop\x1b[0m to finish)".center(40, " "))
 print("(type \x1b[37;5mped\x1b[0m for pedestal)".center(40, " "))
 
-'''
-3) ###########################################################################################
-'''
 
-counter = 0
-DC_tube_IDs = []
-ID_set = set()
+
 def add_tube_to_list(this_tube):
+    '''After a tube is scanned, check if it ha already been scanned during this run. 
+    If the tube has not been scanned (not in the set of TubeIDs), add it to the set of TubeIDs and append it to the ordered list of TubeIDs. 
+    If the tube has been scanned, it is probably a duplicate of the one previously scanned, I decrease the counter because in the main loop the counter 
+    determines the board position, I don't want the board position to keep going up if the tube is a duplicate'''
     global counter
     if (this_tube not in ID_set):
         ID_set.add(this_tube)
@@ -96,46 +111,56 @@ def add_tube_to_list(this_tube):
     elif (this_tube in ID_set):
         counter -= 1
     counter +=  1
-while True:
-    board_number = 4 if counter <= 23 else 1 
-    this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
 
 
-    if this_tube == "ped":
-        new_file_name = f"CAENPS_{year}{month}{day}_Pedestal.log"
+def final_confirm():
+    finish = input("Finish and Write File? [y/n]: ")
+    if finish == "y" or finish == "MSU07373":
+        pass
+    elif finish != "y":
+        print("OK, no file made")
+        exit()
 
-        file_path = pathlib.Path.joinpath(path_to_Google_or_Local_file, new_file_name)
+def get_id_string():
+    global counter, DC_tube_IDs, ID_set, num_of_tubes
+    
+    counter = 0
+    DC_tube_IDs = []
+    ID_set = set()
+    
+    while True:
+        board_number = 4 if counter <= 23 else 1
+
+        this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
+
+        if this_tube == "ped":
+            new_file_name = f"CAENPS_{date_for_file_name}_Pedestal.log"
+
+            file_path = path.join(path_to_Google_or_Local_file, new_file_name)
+
+            for i in range(1,49):
+                this_tube = f"MSU{i:0>5}"
+                print(this_tube)
+                add_tube_to_list(this_tube)
+            this_tube = "stop"
+            print(f"Now saving to: {path.dirname(file_path)}/\x1b[32m{new_file_name}\x1b[0m")
+
+        if (this_tube == "stop") or (this_tube == "MSU07373"):
+            final_confirm()
+            break
+        add_tube_to_list(this_tube)
         
-        for i in range(1,49):
-            this_tube = f"MSU{i:0>5}"
-            print(this_tube)
-            add_tube_to_list(this_tube)
-        this_tube = "stop"
-        print(f"Now saving to: {file_path.parent}/\x1b[32m{new_file_name}\x1b[0m")
+    num_of_tubes = len(DC_tube_IDs)
+    print(f"Number of tubes: {num_of_tubes}")
 
-    if (this_tube == "stop") or (this_tube == "MSU07373"):
-        break
-    add_tube_to_list(this_tube)
-num_of_tubes = len(DC_tube_IDs)
+    ID_string = " ".join(DC_tube_IDs)
+    return ID_string
 
-print(f"Number of tubes: {num_of_tubes}")
-ID_string = " ".join(DC_tube_IDs)
 
-'''
-4) ###########################################################################################
-'''
 
-finish = input("Finish and Write File? [y/n]: ")
 
-if finish == "y" or finish == "MSU07373":
-    pass
-elif finish != "y":
-    print("OK, no file made")
-    exit()
 
-'''
-4) ###########################################################################################
-'''
+
 
 def variable_length_mapping(string:str, number_of_spaces_between_values:int): 
     '''
@@ -155,19 +180,27 @@ def variable_length_mapping(string:str, number_of_spaces_between_values:int):
     string_with_correct_number_of_values = str(" "* number_of_spaces_between_values).join(correctly_sized_list)
     return beginning_info + " " * number_of_spaces_between_values + string_with_correct_number_of_values + "\n"
 
+def write_to_file(ID_string):
+    with open(path_to_template, 'r') as Template:
+        with open(file_path, 'a') as Output:
+            lines = Template.readlines()
+            Output.writelines(lines[0])
+            Output.writelines(lines[1].replace("Name", f"{operator}"))
+            Output.writelines(lines[2].replace("2022-XX-XX XX:XX:00", in_file_date))
+            Output.writelines(lines[3:10])
+            Output.writelines(variable_length_mapping(lines[10], 1)) # Excuse the boilerplate,
+            Output.writelines(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
+            Output.writelines(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
+            Output.writelines(variable_length_mapping(lines[13], 5))
+            Output.writelines(lines[14][0:17] + ID_string + "\n")
+            Output.writelines(variable_length_mapping(lines[15], 1))
 
-with open(path_to_template, 'r') as Template:
-    with open(file_path, 'a') as Output:
-        lines = Template.readlines()
-        Output.writelines(lines[0])
-        Output.writelines(lines[1].replace("Name", f"{operator}"))
-        Output.writelines(lines[2].replace("2022-XX-XX XX:XX:00", f"{year}-{month}-{day} {time}"))
-        Output.writelines(lines[3:10])
-        Output.writelines(variable_length_mapping(lines[10], 1)) # Excuse the boilerplate,
-        Output.writelines(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
-        Output.writelines(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
-        Output.writelines(variable_length_mapping(lines[13], 5))
-        Output.writelines(lines[14][0:17] + ID_string + "\n")
-        Output.writelines(variable_length_mapping(lines[15], 1))
+def main():
+    ID_string = get_id_string()
 
-print("\n\n All Done! :) \n\n")
+    write_to_file(ID_string)
+    
+    print("\n\n All Done! :) \n\n")
+
+if __name__=="__main__":
+    main()
