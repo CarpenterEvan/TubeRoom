@@ -6,8 +6,10 @@ import GetTubeInfo
 
 __author__ = "Evan Carpenter"
 
-global counter, dates_summary_dictionary, tests_summary_dictionary, tubeID_set
 
+
+################################## Pre-defined values ##################################
+global counter, dates_summary_dictionary, tests_summary_dictionary, tubeID_set
 counter = 0
 tests_summary_dictionary = {"Bend":0,  
                             "T1":0, 
@@ -17,9 +19,8 @@ tests_summary_dictionary = {"Bend":0,
 dates_summary_dictionary = dict()
 tubeID_set = set()
 
-
+############################## Process command line args ###############################
 command_line_arguments = sys.argv
-
 if len(command_line_arguments)>2:
     err_string = '''Only one option at a time:
         'write' to write to a file named
@@ -33,25 +34,6 @@ OrderedFile = command_line_arguments[-1] == "ordered" # This saves the tubes in 
 
 CheckFile = command_line_arguments[-1] == "check" # going through a file of tubes and putting them through the main function
 SearchFor =  command_line_arguments[-1] == "search" # Still in progress.
-
-def write_tube_to_file_or_append_to_ordered_list(tubeid):
-    '''This adds a line to the written file or adds a tube to the ordered file. 
-    I keep the ordered version as a list so it can be reversed in order at the end.'''
-    if WriteFile:
-        VerifiedIDs.writelines(tubeid)
-    elif OrderedFile:
-        ordered_list.append(tubeid + "\n")
-    else: pass
-
-def finish_writing_files():
-    '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
-    if WriteFile:
-        VerifiedIDs.close()
-    elif OrderedFile:
-        ordered_list.reverse()
-        OrderedIDs.writelines(ordered_list)
-        OrderedIDs.close()
-    else: pass
 
 if WriteFile:
 
@@ -93,8 +75,31 @@ else:
     file_path = os.path # empty path (?)
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
 
+###################################### Functions ######################################
+def write_tube_to_file_or_append_to_ordered_list(tubeid):
+    '''This adds a line to the written file or adds a tube to the ordered file. 
+    I keep the ordered version as a list so it can be reversed in order at the end.'''
+    if WriteFile:
+        VerifiedIDs.writelines(tubeid)
+    elif OrderedFile:
+        ordered_list.append(tubeid + "\n")
+    else: pass
+def update_counter(tubeid, verify_string, good_tube_dict): 
+    global counter
+    counter = counter + 1  if counter<=9 else 1 # reset counter after counter = 10
+    counter = counter if len(tubeid)!=0 else 0 # this is so you can hit enter (which is input as "") to reset the counter
+    
+    if len(good_tube_dict) == 1: # this is only true when the "filler" dictionary is passed for an error tube ID
+        counter = 0
+    # "\x1b[31m" is the beginning of a red colored text (see GetTubeInfo.red_text) 
+    if "\x1b[31m" in verify_string:
+        colored_counter = GetTubeInfo.red_text(counter) # coloring the counter helps find which index of the row is bad
+    else: 
+        colored_counter = GetTubeInfo.white_text(counter)
 
-
+    if counter == 0:
+        colored_counter = ""
+    return colored_counter
 def add_to_summary_dictionaries(date_string, good_tube_dict):
 
     if date_string not in dates_summary_dictionary.keys():
@@ -107,7 +112,15 @@ def add_to_summary_dictionaries(date_string, good_tube_dict):
         else: pass
     dates_summary_dictionary[date_string] += 1
     #tests_summary_dictionary["total"] += 1
-
+def finish_writing_files():
+    '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
+    if WriteFile:
+        VerifiedIDs.close()
+    elif OrderedFile:
+        ordered_list.reverse()
+        OrderedIDs.writelines(ordered_list)
+        OrderedIDs.close()
+    else: pass
 def print_summary_dictionary_and_exit():
 
         spacer  = " -----------------"
@@ -128,21 +141,7 @@ def print_summary_dictionary_and_exit():
         #print(spacer)
         exit("\n All done! :) \n")
 
-def update_counter(tubeid, verify_string, good_tube_dict): 
-    global counter
-    counter = counter + 1  if counter<=9 else 1 # reset counter after counter = 10
-    counter = counter if len(tubeid)!=0 else 0 # this is so you can hit enter (which is input as "") to reset the counter
-    if len(good_tube_dict) == 1: # this is only true when the "filler" dictionary is passed for an error tube ID
-        counter = 0
-    # "\x1b[31m" is the beginning of a red colored text (see GetTubeInfo.red_text) 
-    if "\x1b[31m" in verify_string:
-        colored_counter = GetTubeInfo.red_text(counter) # coloring the counter helps find which index of the row is bad
-    else: 
-        colored_counter = GetTubeInfo.white_text(counter)
 
-    if counter == 0:
-        colored_counter = ""
-    return colored_counter
 
 def main(inputs):
 
@@ -166,8 +165,8 @@ def main(inputs):
         write_tube_to_file_or_append_to_ordered_list(tubeid)
 
     print("", end="\033[1A")
-    
     print(f"{verify_string} {colored_counter: >11}")
+    
     if counter == 10:
         print("-"*170)
 
@@ -198,4 +197,3 @@ if __name__ == "__main__":
         for tube in newlist: 
             main(tube)
             print(" ")
-
