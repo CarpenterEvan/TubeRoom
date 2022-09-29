@@ -1,49 +1,74 @@
+                                                                        #
 __author__ = "Evan Carpenter"
-__version__ = "4.0"
+__version__ = "4.1"
 
-import os.path
+import os
 from re import match
 import pandas as pd
 from datetime import datetime, timedelta
-from pathlib import Path 
 
-home = Path.home()
-GDrive_to_DB = Path("Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = Path.joinpath(Path("").absolute().parent, "TubeRoom/Verifying", "TUBEDB.txt")
-final_path = Path.joinpath(home, GDrive_to_DB)
+home = os.path.expanduser("~")
+home_to_google_drive_database = os.path.expanduser("~/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
+path_to_local = os.path.join(os.getcwd(), "TUBEDB.txt") # os.path.join(os.path.abspath(""), "Verifying", "TUBEDB.txt")
 
 
-'''This is a module designed to take in the ID of an sMDT barcode and not only find it in the TUBEDB.txt file, 
-which is stored in the Google Drive, but to format the values so that the result is easy to read'''
+
+'''This is a module designed to take in the ID of an sMDT barcode, 
+    and not only find it in the TUBEDB.txt file, which is stored in the 
+    Google Drive, but to format the values so that the result is easy to read. 
+    In case you are new to lab, the terms used: 
+    BT: Bend Test
+    DC: Dark Current test
+    T1: Frist tension test
+    T2: second tension test'''
+
+
+
 green_text  = lambda x: f'\x1b[32m{x}\x1b[0m' # It seems that this adds +9 to length of string
 red_text    = lambda x: f'\x1b[31m{x}\x1b[0m'
 white_text  = lambda x: f'\x1b[39m{x}\x1b[0m'
-flashing_red= lambda x: f'\x1b[31;5m{x}\x1b[0m'
+flashing_red= lambda x: f'\x1b[31;5m{x}\x1b[0m' # This adds +11 to length
+
+
 
 def color_string(string, goal):
-    '''Colors a string green or red using ANSI escape codes depending on if the string matches the goal'''
+    '''Colors a string green or red using ANSI escape codes depending on if the string matches the goal. 
+    ex: a pass for 2nd tension can look like 'Pass2' or 'Pass2*'
+    ex: a pass for DC can look like 'OK' or 'BAD' '''
     passes = match(string, goal)
     if passes:
         return (green_text(string), True)
     elif not passes: 
         return (red_text(string), False)
         
+def copy_DB_file_if_available():
+    operating_system = os.uname().sysname # "Darwin"==Mac "Linux"==Linux "Windows"==Windows
+
+    if operating_system != "Windows":
+        copy_command = "cp"
+    else: 
+        copy_command = "copy"
+
+    os.system(f"{copy_command} '{home_to_google_drive_database}' {path_to_local}")
+
 def format_database():
-    '''Opens Google Drive path to get to the .txt file in the shared drive, hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
+    '''Opens Google Drive path to get to the .txt file in the shared drive, 
+    hoping to change this in the future to reduce dependency on Google Drive Desktop...'''
     try:
 
-        df = pd.read_csv(final_path, 
+        df = pd.read_csv(home_to_google_drive_database,
                         names = ["ID", "T1", "T2", "DC", "FV"],  
                         delimiter = "|",
                         memory_map = True,
                         dtype=str).dropna(axis=0)
-        path_used = final_path
+        path_used = home_to_google_drive_database
+        copy_DB_file_if_available()
 
     except FileNotFoundError:
 
         print(f'''
         
-              1.) Hmm... Could not access {home}/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt
+              1.) Hmm... Could not access {home_to_google_drive_database}
               2.) Trying local path {path_to_local}  
 
               ''')
@@ -62,13 +87,13 @@ def format_database():
 
             exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
 
-    if __name__ == "GetTubeInfo":
+    if __name__ == "GetTubeInfo": # as opposed to "__main__" meaning this is running in a different file
 
         print(f"Database File is from: {path_used}")
         print(f"Last Updated:", datetime.fromtimestamp(os.path.getmtime(path_used)))
 
-    df = df.applymap(lambda string: " ".join(string.split()))
-    df = df.applymap(lambda string: string.split(" "))
+    df = df.applymap(lambda string: " ".join(string.split())) # "1   2 3     4  5"  -->  "1 2 3 4 5"
+    df = df.applymap(lambda string: string.split(" ")) # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
 
     ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
     T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
@@ -87,59 +112,66 @@ def locate_tube_row(input_tubeID:str):
     There are three default letters that I use for quick testing which translate to IDs: d, f, b.
     If something not of the form MSU[0-9]{5} (MSU followed by 5 numbers) is entered, the defaults are checked
     If the ID is not found, the row returned is -1 '''
+
     global DB
-    defaults = {"d": "MSU05123", # default (good)
+
+    defaults = {"d": "MSU05122", # default (good)
                 "f": "MSU01341", # fails multiple tests
                 "b": "MSU00229"} # bad, multiple tests missing, good for testing "-----"
+
     tubeID = input_tubeID
     try:
-        istube = match("MSU[0-9]{5}", tubeID) 
-        assert istube # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
-        # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow
-        tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
-        return tuberow_index     
+        looks_like_tube_ID = match("MSU[0-9]{5}", tubeID) 
 
-    except AssertionError: # This means ID was not valid, possibly a default key
+        if looks_like_tube_ID: # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
+            pass 
 
-        if len(tubeID) == 1 and tubeID in defaults.keys():
+        elif len(tubeID) == 1 and tubeID in defaults.keys():
                 tubeID = defaults[tubeID] # Default
                 tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
                 return tuberow_index
         else: 
             return -1
+
+
+        tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is the only row with the ID
+        # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow
+        return tuberow_index     
+
     except ValueError: # This means the ID is valid but not in the DB
         return -2 
         
 def filter_columns(tuberow_index):
-    '''A tyical 'row' object for a given ID looks like:
+    '''Given a specific row, filter out the values of interest (*). 
+        A tyical 'row' object for a given ID looks like:
        -------------------------------
-       || tubeID          MSU05123 || 0
-       || End                 IHEP || 1  Endplug type
-       || Received      2021-06-23 || 2  
-       || leakrate        3.04E-06 || 3  
-       || bend                0.00 || 4  
-       || flagE               PASS || 5  Bend Flag
-       || T1Date          21-07-07 || 6  Measured on 1st UM Tension
-       || Length           1624.72 || 7  Measured on 1st UM Tension
-       || Frequency           95.0 || 8  
-       || Tension          362.971 || 9  Date of 1st UM Tension
-       || flag                pass || 10 1st Tension flag
-       || L                      B || 11 Length Category
+       || tubeID          MSU05123 ||  0
+       || End                 IHEP ||  1   Endplug type
+       || Received      2021-06-23 ||  2   Shipment date
+       || leakrate        3.04E-06 ||  3 
+       || bend                0.00 ||  4 
+       || flagE               PASS ||  5 * Bend Flag
+       || T1Date          21-07-07 ||  6 * Measured on 1st UM Tension
+       || Length           1624.72 ||  7 * Measured on 1st UM Tension
+       || Frequency           95.0 ||  8 
+       || Tension          362.971 ||  9 * Date of 1st UM Tension
+       || flag                pass || 10 * 1st Tension flag
+       || L                      B || 11   Length Category
        || dFrequency          0.50 || 12 
-       || dTension          -3.831 || 13
-       || dDays                13D || 14
-       || flag2              Pass2 || 15 2nd Tension flag
+       || dTension          -3.831 || 13 *
+       || dDays                13D || 14 *
+       || flag2              Pass2 || 15 * 2nd Tension flag
        || DCday           21-06-23 || 16
-       || sys                 CAEN || 17 DC on CAEN or UM
-       || DC                  0.32 || 18 
-       || HVseconds          54820 || 19 TOTAL time at 2900 V
-       || DCflag                OK || 20 
-       || ENDday          21/07/07 || 21
-       || done?                  3 || 22
-       || ok                   YES || 23
-       || Comment               UM || 24
-       || None             BIS1A12 || 25
-       || None                None || 26
+       || sys                 CAEN || 17   DC on CAEN or UM
+       || DC                  0.32 || 18 * Value of DC
+       || HVseconds          54820 || 19 * TOTAL time at 2900 V
+       || DCflag                OK || 20 *
+       || ENDday          21/07/07 || 21 
+       || done?                  3 || 22 
+       || ok                   YES || 23 * Final Pass
+       || Comment               UM || 24 
+       || None             BIS1A12 || 25   Extra comment
+       || None                None || 26   Extra comment
        || Name: 4407, dtype: object|| 
        -------------------------------''' 
     fullrow = DB.iloc[tuberow_index]
@@ -170,6 +202,19 @@ def filter_columns(tuberow_index):
     return row
 
 def format_tension(row):
+    '''
+    Given a certain row, extract the values related to tension. 
+    Check if both tension tests have been done. 
+    
+    If both have been done, figure out what the previous tension was, 
+        assign it to T1, assign the current tension to T2
+
+    If only the first test has been done, 
+        see how many days until the second test can be done. 
+        return dashes for T2.
+    
+    If neither test has been done, return dashes ("---") 
+    '''
     try:
         
         T1_date = row["T1_date"] 
@@ -205,7 +250,7 @@ def format_tension(row):
         # We need to subtract this difference to see the "true" T1, the test before the most recent one. 
 
         T2_date = datetime.strftime(T1_datetime, "%y-%m-%d")
-        T2_tension = round(T1_tension,3)
+        T2_tension = str(round(T1_tension,3))
 
         T1_date = datetime.strftime(T1_datetime - T2_datetime_delta, "%y-%m-%d")
         T1_tension = round(T1_tension - T2_tension_delta, 3)
@@ -229,9 +274,44 @@ def format_tension(row):
         T2_date = "--------"
         T2_tension = "-------"
 
-    return T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_datetime_delta.days
-def format_values(row:dict):
+    T2_days_delta = T2_datetime_delta.days
 
+    # Remember, if there is no test for T2, T2_tension = "-------" 
+    # then T2_days_delta is the calculated as the difference from T1 to today, 
+    # I want that to display with different colors. 
+    # If it has been less than 14 days, regardless of if there is a test, make T2_days_delta red.
+    # If it has been at least 14 days, check if it has been tested, if there is a T2 test, make it white, if no test, make it green
+    # If somehow a tube is none of these conditions, make it "---" as a safeguard 
+
+    if (T2_days_delta < 14): 
+
+        T2_days_delta = red_text(T2_days_delta)
+ 
+    elif (T2_days_delta >= 14):
+
+        if ("-" in T2_tension):
+
+            T2_days_delta = green_text(T2_days_delta)
+
+        else: 
+
+            T2_days_delta = white_text(T2_days_delta)
+
+    else: 
+        T2_days_delta = white_text("---")
+
+    return T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_days_delta
+
+def format_values(row:dict):
+    '''
+
+    Take in the filtered values from the row. 
+    If they are measurement values attempt to convert them to a float. 
+    If it is a flag indicating pass/fail, color it green/red accordingly
+
+    return two dictionaries: one of the colored value and flag strings, and one of True/False for all 4 tests
+
+    '''
     tubeID = row["tubeID"]
     shipment_date_string = row["Shipment_date"].strip()
     shipment_date = datetime.strptime(shipment_date_string, "%Y-%m-%d")
@@ -244,7 +324,6 @@ def format_values(row:dict):
 
     T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_days_delta = format_tension(row)
 
-    T2_days_delta = red_text(T2_days_delta) if T2_days_delta < 14 else white_text(T2_days_delta)
 
     DC_DC = row["DC_DC"]
     DC_date = row["DC_date"]
@@ -273,20 +352,31 @@ def format_values(row:dict):
 
     return value_dict, good_tube_dict
 
-
-
 def get_formatted_tuple(input_tubeID:str):
+    '''
+    Using the prompted input tube ID, attempt to use locate_tube_row to find the row. 
+    Handle any errors thrown by locate_tube_row. 
+    Use filter_columns to get out the values of the row
+    Use format_values with the row to get the formatted dictionaries. 
+    Use the formatted string dictionary to make a list of printable strings, 
+        join them around a common separator and return the string. 
+    return the boolean dictionary that sumarizes each test. 
+
+    '''
     tuberow = locate_tube_row(input_tubeID)
 
-    filler_string = "-"*166
     
-    error_string = " | ".join([f"{input_tubeID}", 
+    
+    error_string = " | ".join([f"{input_tubeID: <8}", 
                                 "----------", 
                                 "Bend: ----", 
                                 "T1 on -------- ---- ---.---g ----.--mm", 
-                                "T2 on --------  -----  ---.---g", 
+                                "T2 on -------- (∆---) -----  ---.---g", 
                                 "DC on -------- ---.--nA  --:--:--   ---", 
                                 "Final: --- "])
+
+    filler_string = "-"*len(error_string)
+
     #f"The ID '{input_tubeID}' either does not exist or is not in the database yet :("
     if tuberow == -1:
         return filler_string, {"filler": False}
@@ -295,9 +385,8 @@ def get_formatted_tuple(input_tubeID:str):
     else: 
         pass
 
-    full_tuberow = locate_tube_row(input_tubeID)
 
-    row = filter_columns(full_tuberow)
+    row = filter_columns(tuberow)
 
     value, good_tube_dict = format_values(row)
     good_tube = all(good_tube_dict.values())
@@ -317,9 +406,9 @@ def get_formatted_tuple(input_tubeID:str):
     final_string = " | ".join(print_list)
     return final_string, good_tube_dict
 
-
 def id_to_values(input_tubeID:str):
-    '''Quick and easy use of functions to return unformatted dictionaries of values.'''
+    '''Quick and easy use of functions to return the dictionaries of values. 
+    This function does not handle errors from locate_tube_row'''
     tuberow_index = locate_tube_row(input_tubeID)
     row = filter_columns(tuberow_index)
     value_dict, good_tube_dict = format_values(row)

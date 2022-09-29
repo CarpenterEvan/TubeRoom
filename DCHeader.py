@@ -17,22 +17,22 @@
 '''
 
 from datetime import date, datetime
-from os import path
+import os
 in_file_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # ex. 2022-09-07 09:47:06
 date_for_file_name = date.today().strftime("%Y%m%d")   # ex. 20220927
 
-home = path.expanduser("~")
-GDrive_to_DB = path.relpath("Google Drive/Shared drives/sMDT Tube Testing Reports")
-home_to_DB = path.join(home, GDrive_to_DB) 
-home_to_processed = path.join(home_to_DB, "Processed")
+home = os.path.expanduser("~")
+GDrive_to_DB = os.path.relpath("Google Drive/Shared drives/sMDT Tube Testing Reports")
+home_to_DB = os.path.join(home, GDrive_to_DB) 
+home_to_processed = os.path.join(home_to_DB, "Processed")
 
-if path.exists(home_to_DB):
-    path_to_Google_or_Local_file = path.join(home_to_DB, "CAEN")
+if os.path.exists(home_to_DB):
+    path_to_Google_or_Local_file = os.path.join(home_to_DB, "CAEN")
 else:
-    print(f"\nCould not find Google Drive!") 
-    path_to_Google_or_Local_file = path.join(path.abspath(""), "DC")
+    print(f"\nCould not find Google Drive Desktop!") 
+    path_to_Google_or_Local_file = os.path.join(os.getcwd(), "DC")
 
-path_to_template = path.join(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
+path_to_template = os.path.join(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
 
 
@@ -41,11 +41,11 @@ file_name = f"CAENPS_{date_for_file_name}_test.log"
 
 def check_if_file_exists(file_name):
     
-    file_exists = path.exists(path.join(path_to_Google_or_Local_file, file_name))
+    file_exists = os.path.exists(os.path.join(path_to_Google_or_Local_file, file_name))
 
-    if (file_exists==False) and (path.exists(home_to_DB)): # check if there is a file for today and it is just in the Processsed folder.
-        processed_file = path.join(home_to_processed, file_name)
-        processed_file_exists = path.exists(processed_file)
+    if (file_exists==False) and (os.path.exists(home_to_DB)): # check if there is a file for today and it is just in the Processsed folder.
+        processed_file = os.path.join(home_to_processed, file_name)
+        processed_file_exists = os.path.exists(processed_file)
         file_exists = processed_file_exists
 
     return file_exists
@@ -84,9 +84,9 @@ else:
     file_name = file_name
 
 
-file_path = path.join(path_to_Google_or_Local_file, file_name)
+file_path = os.path.join(path_to_Google_or_Local_file, file_name)
 
-print(f"\nSaving to: {path.dirname(file_path)}/\x1b[32m{file_name}\x1b[0m")
+print(f"\nSaving to: {os.path.dirname(file_path)}/\x1b[32m{file_name}\x1b[0m")
 
 operator = input("Operator: ")
 if operator == "stop":
@@ -114,6 +114,7 @@ def add_tube_to_list(this_tube):
 
 
 def final_confirm():
+
     finish = input("Finish and Write File? [y/n]: ")
     if finish == "y" or finish == "MSU07373":
         pass
@@ -134,24 +135,24 @@ def get_id_string():
         this_tube = input(f"Board {board_number} Position {counter % 24: >2}: ")
 
         if this_tube == "ped":
+            global file_path
             new_file_name = f"CAENPS_{date_for_file_name}_Pedestal.log"
 
-            file_path = path.join(path_to_Google_or_Local_file, new_file_name)
+            file_path = os.path.join(path_to_Google_or_Local_file, new_file_name)
 
             for i in range(1,49):
                 this_tube = f"MSU{i:0>5}"
                 print(this_tube)
                 add_tube_to_list(this_tube)
             this_tube = "stop"
-            print(f"Now saving to: {path.dirname(file_path)}/\x1b[32m{new_file_name}\x1b[0m")
+            print(f"Now saving to: {os.path.dirname(file_path)}/\x1b[32m{new_file_name}\x1b[0m")
 
         if (this_tube == "stop") or (this_tube == "MSU07373"):
+            num_of_tubes = len(DC_tube_IDs)
+            print(f"Number of tubes: {num_of_tubes}")
             final_confirm()
             break
         add_tube_to_list(this_tube)
-        
-    num_of_tubes = len(DC_tube_IDs)
-    print(f"Number of tubes: {num_of_tubes}")
 
     ID_string = " ".join(DC_tube_IDs)
     return ID_string
