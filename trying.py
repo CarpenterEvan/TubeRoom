@@ -1,3 +1,3 @@
 import os
-word = input("word: ")
-print(word)
+
+print(os.path.abspath(""))

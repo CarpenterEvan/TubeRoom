@@ -1,6 +1,7 @@
 import os 
 import sys
 from datetime import datetime
+import time
 from GetTubeInfo import get_formatted_tuple
 import GetTubeInfo
 
@@ -11,11 +12,17 @@ __author__ = "Evan Carpenter"
 ################################## Pre-defined values ##################################
 global counter, dates_summary_dictionary, tests_summary_dictionary, tubeID_set
 counter = 0
-tests_summary_dictionary = {"Bend":0,  
-                            "T1":0, 
-                            "T2":0, 
-                            "DC":0,
-					        "total":0}
+tests_summary_dictionary = {"BT_pass_TT_pass_DC_pass":0,
+
+                            "BT_fail_TT_pass_DC_pass":0,
+                            "BT_pass_TT_fail_DC_pass":0,
+                            "BT_pass_TT_pass_DC_fail":0,
+
+                            "BT_fail_TT_fail_DC_pass":0,
+                            "BT_fail_TT_pass_DC_fail":0,
+                            "BT_pass_TT_fail_DC_fail":0,
+
+                            "BT_fail_TT_fail_DC_fail":0}
 dates_summary_dictionary = dict()
 tubeID_set = set()
 
@@ -40,8 +47,8 @@ if WriteFile:
     OrderedFile = False
     CheckFile = False
 
-    file_name = f"Verified_{datetime.now().strftime('%Y%m%d%H%%M%s')}.txt"
-    file_path = os.path.join(os.curdir(), "Verifying", file_name)
+    file_name = f"Verified_{datetime.now().strftime('%Y%m%d%H')}.txt"
+    file_path = os.path.join(os.path.abspath(""), "Verifying", file_name)
     VerifiedIDs = open(file_path, "a+") # Writes to a file with yyyymmdd format in name
     print(f"\x1b[32;5mRecording\x1b[0m: {file_path}") # Blinking green text "Recording"
 
@@ -91,27 +98,32 @@ def update_counter(tubeid, verify_string, good_tube_dict):
     
     if len(good_tube_dict) == 1: # this is only true when the "filler" dictionary is passed for an error tube ID
         counter = 0
+
     # "\x1b[31m" is the beginning of a red colored text (see GetTubeInfo.red_text) 
+    
     if "\x1b[31m" in verify_string:
         colored_counter = GetTubeInfo.red_text(counter) # coloring the counter helps find which index of the row is bad
     else: 
         colored_counter = GetTubeInfo.white_text(counter)
 
     if counter == 0:
-        colored_counter = ""
+        colored_counter =  GetTubeInfo.white_text("") # removing GetTubeInfo.white_text messes with padding
+
     return colored_counter
 def add_to_summary_dictionaries(date_string, good_tube_dict):
-
     if date_string not in dates_summary_dictionary.keys():
         dates_summary_dictionary[date_string] = 0
     else: pass
 
-    for i in good_tube_dict.keys():
-        if good_tube_dict[i] == True:
-            tests_summary_dictionary[i] += 1
-        else: pass
+    boolean_to_pass_fail = lambda boolean: "pass" if boolean else "fail"
+    Bend = boolean_to_pass_fail(good_tube_dict["Bend"])
+    Tens = boolean_to_pass_fail(good_tube_dict["T1"] and good_tube_dict["T2"])
+    DC =  boolean_to_pass_fail(good_tube_dict["DC"])
+
+    tests_summary_dictionary[f"BT_{Bend}_TT_{Tens}_DC_{DC}"] += 1
     dates_summary_dictionary[date_string] += 1
-    #tests_summary_dictionary["total"] += 1
+
+
 def finish_writing_files():
     '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
     if WriteFile:
@@ -122,24 +134,45 @@ def finish_writing_files():
         OrderedIDs.close()
     else: pass
 def print_summary_dictionary_and_exit():
-
-        spacer  = " -----------------"
-
         finish_writing_files()
 
-        print("\n" + spacer)
+        spacer  = chr(9552)*17 
+        top_left, top_right = chr(9556), chr(9559)
+        wall = chr(9553)
+        separator_left, separator_right = chr(9568), chr(9571)
+        bot_left, bot_right = chr(9562), chr(9565)
 
-        for i in sorted(dates_summary_dictionary):
-            print(f"| {i}: {dates_summary_dictionary[i]: <3} |")
-        print(f"| {'Total:': ^11} {sum(dates_summary_dictionary.values()): <3} |")
 
-        print(spacer)
-        #total = tests_summary_dictionary['total']
-        #for i in sorted(tests_summary_dictionary)[:-1]:
-        #    print(f"Passed {i: ^4} test: {tests_summary_dictionary[i]}  |  Failed/Need {i: ^4} test: {total - tests_summary_dictionary[i]}")
-        #print(f"Total Scanned: {total} «")
-        #print(spacer)
-        exit("\n All done! :) \n")
+        cap_of_box =          top_left + spacer + top_right
+        box_entry = lambda item:  wall +  item  + wall
+        box_seperator = separator_left + spacer + separator_right
+        U_of_box =            bot_left + spacer + bot_right
+        
+
+        print(f"{'Dates Summary': ^20} {'Tests Summary': ^20}")
+        print(cap_of_box + " "*2 + cap_of_box)
+
+
+        dates_list = [f" {item}: {dates_summary_dictionary[item]: >3} " for item in sorted(dates_summary_dictionary)]
+        gc = GetTubeInfo.green_text(chr(10003)) # green check
+        rx = GetTubeInfo.red_text(chr(10005)) # red X
+        get_gc_or_rx_from_pass_fail = lambda string: string.replace("pass",gc).replace("fail",rx).replace("_"," ")
+
+        tests_list = [ f"{get_gc_or_rx_from_pass_fail(item)} {tests_summary_dictionary[item]} " for item in tests_summary_dictionary.keys()]
+        if len(dates_list) <8:
+            for _ in range(10-len(dates_list)):
+                dates_list.append(" "*len(dates_list[0]))
+
+        for index, test in enumerate(tests_list):
+            print(box_entry(dates_list[index]) + " "*2 +  box_entry(test))
+
+        
+        print(box_seperator + " "*2 + U_of_box)
+        print(wall + f" {'Total:': ^11} {sum(dates_summary_dictionary.values()): >3} " + wall + f"    All done! {chr(2384)}  :)")
+
+        print(U_of_box)
+  
+        exit("\n")
 
 
 
@@ -166,14 +199,29 @@ def main(inputs):
 
     print("", end="\033[1A")
     print(f"{verify_string} {colored_counter: >11}")
-    
+
     if counter == 10:
         print("-"*170)
 
     return tubeid
-
+def test_case():
+    intro_string = "ID       | Ship. date | Bend test  | 1st-TT  Date        Tension  Length    | 2nd-TT  Date   (days)        Tension  | DC      Date      DC    Time on DC      | Final pass?"
+    
+    print(intro_string)
+    print("-"*len(intro_string))
+    print(" ")
+    for _ in range(10):
+        main("d"); print(" ")
+        main("f"); print(" ")
+        main("b"); print(" ")
+    main("stop")
+    return 0
 if __name__ == "__main__":
+    if sys.argv[-1]=="test":
+            test_case()
+
     if not CheckFile:
+        
         while True:
             main(input("Tube ID: "))
 
@@ -182,7 +230,6 @@ if __name__ == "__main__":
         newlist = []
         if "Mod" in file_name:
             mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[3:]}")
-            print(mod_dir)
             for file in os.scandir(mod_dir):
                 a_file = os.path.join(mod_dir, file.name)
                 tube_list = open(a_file, "r").readlines()
@@ -197,3 +244,4 @@ if __name__ == "__main__":
         for tube in newlist: 
             main(tube)
             print(" ")
+    

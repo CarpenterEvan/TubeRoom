@@ -12,15 +12,18 @@ home_to_google_drive_database = os.path.expanduser("~/Google Drive/Shared drives
 path_to_local = os.path.join(os.getcwd(), "TUBEDB.txt") # os.path.join(os.path.abspath(""), "Verifying", "TUBEDB.txt")
 
 
+__doc__ = '''
 
-'''This is a module designed to take in the ID of an sMDT barcode, 
-    and not only find it in the TUBEDB.txt file, which is stored in the 
-    Google Drive, but to format the values so that the result is easy to read. 
-    In case you are new to lab, the terms used: 
-    BT: Bend Test
-    DC: Dark Current test
-    T1: Frist tension test
-    T2: second tension test'''
+This is a module designed to take in the ID of an sMDT barcode, 
+and not only find it in the TUBEDB.txt file, which is stored in the 
+Google Drive, but to format the values so that the result is easy to read. 
+In case you are new to lab, the terms used: 
+BT: Bend Test
+DC: Dark Current test
+T1: Frist tension test
+T2: second tension test
+
+'''
 
 
 
@@ -85,7 +88,7 @@ def format_database():
 
         except FileNotFoundError:
 
-            exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into {path_to_local.parent}\n")
+            exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into: \n\t\t{os.path.dirname(path_to_local)}\n")
 
     if __name__ == "GetTubeInfo": # as opposed to "__main__" meaning this is running in a different file
 
@@ -121,15 +124,13 @@ def locate_tube_row(input_tubeID:str):
 
     tubeID = input_tubeID
     try:
-        looks_like_tube_ID = match("MSU[0-9]{5}", tubeID) 
+        looks_like_tube_ID = match("MSU[0-9]{5}", tubeID) != None
 
-        if looks_like_tube_ID: # this will raise an AssertionError if the ID does not look like "MSU" followed by 5 numbers
+        if looks_like_tube_ID:
             pass 
 
-        elif len(tubeID) == 1 and tubeID in defaults.keys():
+        elif tubeID in defaults.keys():
                 tubeID = defaults[tubeID] # Default
-                tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is row with ID
-                return tuberow_index
         else: 
             return -1
 
@@ -376,12 +377,11 @@ def get_formatted_tuple(input_tubeID:str):
                                 "Final: --- "])
 
     filler_string = "-"*len(error_string)
-
-    #f"The ID '{input_tubeID}' either does not exist or is not in the database yet :("
+    
     if tuberow == -1:
         return filler_string, {"filler": False}
     elif tuberow == -2:
-        return error_string, {"filler": False}
+        return error_string, {"error": False}
     else: 
         pass
 
@@ -403,7 +403,7 @@ def get_formatted_tuple(input_tubeID:str):
         Final_flag = red_text(row["Final_flag"])
 
     print_list.append(f"Final: {Final_flag: <12}")
-    final_string = " | ".join(print_list)
+    final_string = f" | ".join(print_list)
     return final_string, good_tube_dict
 
 def id_to_values(input_tubeID:str):
