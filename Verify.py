@@ -143,7 +143,7 @@ def print_summary_dictionary_and_exit():
 
         
         top_left, top_right = chr(9556), chr(9559)
-        spacer  = chr(9552)*19 
+        spacer  = chr(9552)*21
         wall = chr(9553)
         separator_left, separator_right = chr(9568), chr(9571)
         bot_left, bot_right = chr(9562), chr(9565)
@@ -164,8 +164,8 @@ def print_summary_dictionary_and_exit():
 
         tests_found_during_scanning = [test for test in tests_summary_dictionary.keys() if tests_summary_dictionary[test] !=0]
 
-        tests_list = [ f"{get_gc_or_rx_from_pass_fail(test)} {tests_summary_dictionary[test]: >3} " for test in tests_found_during_scanning]
-        dates_list = [f" {item}: {dates_summary_dictionary[item]: >4}  " for item in sorted(dates_summary_dictionary)]
+        tests_list = [ f"{get_gc_or_rx_from_pass_fail(test)} {tests_summary_dictionary[test]: >5} " for test in tests_found_during_scanning]
+        dates_list = [f" {item}:  {dates_summary_dictionary[item]: >5}  " for item in sorted(dates_summary_dictionary)]
         filler_list = [" "*len(spacer) for _ in range(abs(len(tests_list)-len(dates_list)))]
 
         if len(dates_list) < len(tests_list): # tests box is longer than dates box
@@ -173,7 +173,7 @@ def print_summary_dictionary_and_exit():
         elif len(dates_list) > len(tests_list): # dates box is longer than tests box
             tests_list += filler_list 
 
-        print(f"\n {'Dates Summary': ^20}   {'Tests Summary': ^20}")
+        print(f"\n  {'Dates Summary': ^20}     {'Tests Summary': ^20}")
         print(           cap_of_box +    " "*2   + cap_of_box      )
 
         for index in range(max(len(dates_list) , len(tests_list))):
@@ -181,9 +181,9 @@ def print_summary_dictionary_and_exit():
 
         print(        box_seperator +    " "*2   +  U_of_box       )
 
-        print(wall + f" {'Total:': ^11} {sum(dates_summary_dictionary.values()): >4}  " + wall + " "*5 + f"All done! {chr(9835)} :)")
+        print(wall + f" {'Total:': ^11} {sum(dates_summary_dictionary.values()): >6}  " + wall + " "*7 + f"All done! {chr(9835)} :)")
 
-        print(        U_of_box      +    " "*6   +    "好"*6       )
+        print(        U_of_box      +    " "*8   +    "好"*6       )
   
         exit("\n")
 
@@ -257,10 +257,9 @@ if __name__ == "__main__":
                 tube_list = open(a_file, "r").readlines()
                 newlist += [id.strip() for id in tube_list]
         else: 
+            import re
             with open(file_name, 'r') as the_file:
-                for tubeid in the_file.readlines():
-                    newlist.append(tubeid.strip(" \n"))
-
+                newlist = re.findall("MSU[0-9]{5}", the_file.read())
         newlist.append("stop")
 
         for tube in newlist: 
