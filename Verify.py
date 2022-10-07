@@ -1,7 +1,6 @@
 import os 
 import sys
 from datetime import datetime
-import time
 from GetTubeInfo import get_formatted_tuple
 import GetTubeInfo
 
@@ -78,6 +77,12 @@ elif OrderedFile:
     OrderedIDs = open(file_path, "w")
     print(f"\x1b[32;5mMaking Ordered File\x1b[0m at: {file_path}")
 
+elif SearchFor:
+    input_ID = ""
+    target_list = []
+    while input_ID!="stop":
+        input_ID = input("Search for: ")
+        target_list.append(input_ID)
 else: 
     file_path = os.path # empty path (?)
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
@@ -136,8 +141,9 @@ def finish_writing_files():
 def print_summary_dictionary_and_exit():
         finish_writing_files()
 
-        spacer  = chr(9552)*17 
+        
         top_left, top_right = chr(9556), chr(9559)
+        spacer  = chr(9552)*19 
         wall = chr(9553)
         separator_left, separator_right = chr(9568), chr(9571)
         bot_left, bot_right = chr(9562), chr(9565)
@@ -147,30 +153,37 @@ def print_summary_dictionary_and_exit():
         box_entry = lambda item:  wall +  item  + wall
         box_seperator = separator_left + spacer + separator_right
         U_of_box =            bot_left + spacer + bot_right
-        
-
-        print(f"{'Dates Summary': ^20} {'Tests Summary': ^20}")
-        print(cap_of_box + " "*2 + cap_of_box)
 
 
-        dates_list = [f" {item}: {dates_summary_dictionary[item]: >3} " for item in sorted(dates_summary_dictionary)]
-        gc = GetTubeInfo.green_text(chr(10003)) # green check
+        gc = GetTubeInfo.green_text(chr(10003)) # green check 
         rx = GetTubeInfo.red_text(chr(10005)) # red X
+        
+        # get green check or red x from pass fail. 
+        # "BT_pass_TT_pass_DC_fail" -> "BT chr(10003) TT chr(10003) DC chr(10005)"
         get_gc_or_rx_from_pass_fail = lambda string: string.replace("pass",gc).replace("fail",rx).replace("_"," ")
 
-        tests_list = [ f"{get_gc_or_rx_from_pass_fail(item)} {tests_summary_dictionary[item]} " for item in tests_summary_dictionary.keys()]
-        if len(dates_list) <8:
-            for _ in range(10-len(dates_list)):
-                dates_list.append(" "*len(dates_list[0]))
+        tests_found_during_scanning = [test for test in tests_summary_dictionary.keys() if tests_summary_dictionary[test] !=0]
 
-        for index, test in enumerate(tests_list):
-            print(box_entry(dates_list[index]) + " "*2 +  box_entry(test))
+        tests_list = [ f"{get_gc_or_rx_from_pass_fail(test)} {tests_summary_dictionary[test]: >3} " for test in tests_found_during_scanning]
+        dates_list = [f" {item}: {dates_summary_dictionary[item]: >4}  " for item in sorted(dates_summary_dictionary)]
+        filler_list = [" "*len(spacer) for _ in range(abs(len(tests_list)-len(dates_list)))]
 
-        
-        print(box_seperator + " "*2 + U_of_box)
-        print(wall + f" {'Total:': ^11} {sum(dates_summary_dictionary.values()): >3} " + wall + f"    All done! {chr(2384)}  :)")
+        if len(dates_list) < len(tests_list): # tests box is longer than dates box
+            dates_list += filler_list 
+        elif len(dates_list) > len(tests_list): # dates box is longer than tests box
+            tests_list += filler_list 
 
-        print(U_of_box)
+        print(f"\n {'Dates Summary': ^20}   {'Tests Summary': ^20}")
+        print(           cap_of_box +    " "*2   + cap_of_box      )
+
+        for index in range(max(len(dates_list) , len(tests_list))):
+            print(box_entry(dates_list[index]) + " "*2 +  box_entry(tests_list[index]))
+
+        print(        box_seperator +    " "*2   +  U_of_box       )
+
+        print(wall + f" {'Total:': ^11} {sum(dates_summary_dictionary.values()): >4}  " + wall + " "*5 + f"All done! {chr(9835)} :)")
+
+        print(        U_of_box      +    " "*6   +    "好"*6       )
   
         exit("\n")
 
@@ -182,7 +195,10 @@ def main(inputs):
 
     if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]:
         print_summary_dictionary_and_exit()
+    elif SearchFor and tubeid in target_list: 
+        print("\a", end="\033[1A")
     else: pass
+
     
     verify_string, good_tube_dict = get_formatted_tuple(tubeid)
 
@@ -194,12 +210,12 @@ def main(inputs):
     #This should be self consistent while looking for duplicates in the good/bad dictionary because a tube that is bad on first scan won't update to good while the program is running
     if not_dashes and tubeid not in tubeID_set:
         tubeID_set.add(tubeid)
-        add_to_summary_dictionaries(date_string, good_tube_dict)
         write_tube_to_file_or_append_to_ordered_list(tubeid)
+        add_to_summary_dictionaries(date_string, good_tube_dict)
 
     print("", end="\033[1A")
     print(f"{verify_string} {colored_counter: >11}")
-
+        
     if counter == 10:
         print("-"*170)
 
@@ -210,10 +226,15 @@ def test_case():
     print(intro_string)
     print("-"*len(intro_string))
     print(" ")
-    for _ in range(10):
-        main("d"); print(" ")
-        main("f"); print(" ")
-        main("b"); print(" ")
+    
+    main("d"); print(" ")
+    main("f"); print(" ")
+    main("b"); print(" ")
+    main("MSU00482"); print(" ")
+    main("MSU02589"); print(" ")
+    main("MSU01914"); print(" ")
+    main("MSU03153"); print(" ")
+    main("MSU03909"); print(" ")
     main("stop")
     return 0
 if __name__ == "__main__":
@@ -227,6 +248,7 @@ if __name__ == "__main__":
 
     if CheckFile:
         file_name = input("File Name [ModXX]: ")
+        print(" ")
         newlist = []
         if "Mod" in file_name:
             mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[3:]}")
@@ -237,7 +259,7 @@ if __name__ == "__main__":
         else: 
             with open(file_name, 'r') as the_file:
                 for tubeid in the_file.readlines():
-                    newlist.append(tubeid)
+                    newlist.append(tubeid.strip(" \n"))
 
         newlist.append("stop")
 

@@ -317,7 +317,7 @@ def format_values(row:dict):
     shipment_date_string = row["Shipment_date"].strip()
     shipment_date = datetime.strptime(shipment_date_string, "%Y-%m-%d")
 
-    Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS")
+    Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS") # string Bend_flag, boolean Bend_passed
     T1_flag, T1_passed = color_string(row["T1_flag"], "pass")
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
     DC_flag, DC_passed = color_string(row["DC_flag"], "OK")
@@ -331,16 +331,18 @@ def format_values(row:dict):
 
     try: 
 
-        DC_seconds = int(row["DC_seconds"])
-        DC_hours = DC_seconds // 3600
+        DC_total_time_in_seconds = int(row["DC_seconds"])
+        DC_hours = DC_total_time_in_seconds // 3600
+        DC_minutes = (DC_total_time_in_seconds - DC_hours * 3600) // 60
+        DC_seconds = DC_total_time_in_seconds - DC_minutes * 60 - DC_hours * 3600
+        DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}"
+
         DC_pass:bool = (DC_hours>=4) and DC_passed
-        DC_minutes = (DC_seconds - DC_hours * 3600) // 60
-        DC_seconds = DC_seconds - DC_minutes * 60 - DC_hours * 3600
-        DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}" 
+        DC_total_time_colored = white_text(DC_total_time) if (DC_hours>=4) else red_text(DC_total_time)
 
     except ValueError:
         
-        DC_total_time = "00:00:00"
+        DC_total_time_colored = white_text("00:00:00")
         DC_pass = False
 
     good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
@@ -349,7 +351,7 @@ def format_values(row:dict):
                   "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
                   "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
                   "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension, "T2_time_delta": T2_days_delta, 
-                  "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time, "DC_Flag": DC_flag}
+                  "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time_colored, "DC_Flag": DC_flag}
 
     return value_dict, good_tube_dict
 
@@ -362,7 +364,6 @@ def get_formatted_tuple(input_tubeID:str):
     Use the formatted string dictionary to make a list of printable strings, 
         join them around a common separator and return the string. 
     return the boolean dictionary that sumarizes each test. 
-
     '''
     tuberow = locate_tube_row(input_tubeID)
 
@@ -396,8 +397,8 @@ def get_formatted_tuple(input_tubeID:str):
                   f"Bend: {value['Bend_Flag']: <12}",
                   f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']:0<7}mm",
                   f"T2 on {value['T2_Date']: <9}(∆{value['T2_time_delta']: >12}) {value['T2_Flag']: <15} {value['T2_Tension']:0<7}g",
-                  f"DC on {value['DC_Date']} {value['DC_DC']: >6}nA {value['DC_Time']: ^10} {value['DC_Flag']: >13}"]
-    if row["Final_flag"] == "YES" and good_tube:
+                  f"DC on {value['DC_Date']} {value['DC_DC']: >6}nA {value['DC_Time']: ^19} {value['DC_Flag']: >13}"]
+    if (row["Final_flag"] == "OK") or (row["Final_flag"] == "YES") and good_tube:
         Final_flag = green_text(row["Final_flag"])
     else: 
         Final_flag = red_text(row["Final_flag"])
