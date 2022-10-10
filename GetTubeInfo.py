@@ -1,7 +1,7 @@
                                                                         #
 __author__ = "Evan Carpenter"
 __version__ = "4.1"
-
+import re
 import os
 from re import match
 import pandas as pd
@@ -13,7 +13,6 @@ path_to_local = os.path.join(os.getcwd(), "TUBEDB.txt") # os.path.join(os.path.a
 
 
 __doc__ = '''
-
 This is a module designed to take in the ID of an sMDT barcode, 
 and not only find it in the TUBEDB.txt file, which is stored in the 
 Google Drive, but to format the values so that the result is easy to read. 
@@ -22,10 +21,7 @@ BT: Bend Test
 DC: Dark Current test
 T1: Frist tension test
 T2: second tension test
-
 '''
-
-
 
 green_text  = lambda x: f'\x1b[32m{x}\x1b[0m' # It seems that this adds +9 to length of string
 red_text    = lambda x: f'\x1b[31m{x}\x1b[0m'
@@ -45,6 +41,10 @@ def color_string(string, goal):
         return (red_text(string), False)
         
 def copy_DB_file_if_available():
+    '''
+    You never know when you'll be offline (or at least, I dont know when ILL be offline...), if you have access to the GDrive, 
+    this function will copy a version into the cwd to have an updated version ready. 
+    '''
     operating_system = os.uname().sysname # "Darwin"==Mac "Linux"==Linux "Windows"==Windows
 
     if operating_system != "Windows":
@@ -88,12 +88,12 @@ def format_database():
 
         except FileNotFoundError:
 
-            exit(f"\t3.) If you get this message, still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into: \n\t\t{os.path.dirname(path_to_local)}\n")
+            exit(f"\t3.) If you get this message, I still could not find TUBEDB.txt, either install Google Drive Desktop or copy TUBEDB.txt from the Google Drive into: \n\t\t{os.path.dirname(path_to_local)}\n")
 
     if __name__ == "GetTubeInfo": # as opposed to "__main__" meaning this is running in a different file
 
         print(f"Database File is from: {path_used}")
-        print(f"Last Updated:", datetime.fromtimestamp(os.path.getmtime(path_used)))
+        print(f"and was Last Updated: ", datetime.fromtimestamp(os.path.getmtime(path_used)))
 
     df = df.applymap(lambda string: " ".join(string.split())) # "1   2 3     4  5"  -->  "1 2 3 4 5"
     df = df.applymap(lambda string: string.split(" ")) # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
@@ -355,8 +355,8 @@ def format_values(row:dict):
 
     return value_dict, good_tube_dict
 
-def get_formatted_tuple(input_tubeID:str):
-    '''
+def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
+    __doc__ ='''
     Using the prompted input tube ID, attempt to use locate_tube_row to find the row. 
     Handle any errors thrown by locate_tube_row. 
     Use filter_columns to get out the values of the row
@@ -405,6 +405,11 @@ def get_formatted_tuple(input_tubeID:str):
 
     print_list.append(f"Final: {Final_flag: <12}")
     final_string = f" | ".join(print_list)
+    # Why put this at the end? Because I like colors and think they should be fundamentally default
+    # and I've already coded the padding in print_list and don't want to re-write the boolean checks to 
+    # color the strings properly after they've been created. 
+    if suppress_colors: 
+        final_string = re.sub("\\x1b\[[0-9]*m", "", final_string)
     return final_string, good_tube_dict
 
 def id_to_values(input_tubeID:str):

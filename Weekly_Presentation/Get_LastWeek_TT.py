@@ -37,7 +37,7 @@ for file in processed_folder.glob("*.log"):
 
 fig = plt.figure(figsize=(8,5), tight_layout=True)
 ax = fig.add_subplot(111,
-                     title=f"Tension Tests Performed Between {week_ago:%Y/%m/%d}-{today:%Y/%m/%d}", 
+                     title=f"Tension Tests Performed Between {week_ago:%m/%d}-{today:%m/%d}", 
                      xlabel="Tension (g)",
                      ylabel="Number of Tubes",
                      aspect="auto")
@@ -76,4 +76,5 @@ ax.text(0.25, 0.55, f"  Over 380g: {number_over} tube(s)",
         transform=ax.transAxes)
 
 ax.set_xticks(bins)
+plt.savefig("Weekly_Presentation/last_week_tt.png", dpi=1000)
 plt.show()
