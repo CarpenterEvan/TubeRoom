@@ -2,7 +2,9 @@ from pathlib import Path
 import pandas as pd 
 import matplotlib.pyplot as plt
 import datetime
-
+import os
+save_file = os.getcwd()
+print("\n" + save_file)
 today = datetime.datetime.today()
 week_ago = today - datetime.timedelta(days = 7)
 print(week_ago.strftime("%Y%m%d"))
@@ -43,8 +45,7 @@ ax = fig.add_subplot(111,
                      aspect="auto")
 
 n, bins, patches = ax.hist(df["Tension"], bins=range(320,410,10))# so bins= [325,335,345,355,365,375,385,395]
-
-bin_centers = [(patch._x0 + patch._x1)/2 for patch in patches]
+bin_centers = [(patch.xy[0]+patch._width*0.5)for patch in patches]
 
 number_under = len(df[(df["Tension"]<325)])
 number_over =  len(df[(df["Tension"]>380)])
@@ -76,5 +77,5 @@ ax.text(0.25, 0.55, f"  Over 380g: {number_over} tube(s)",
         transform=ax.transAxes)
 
 ax.set_xticks(bins)
-plt.savefig("Weekly_Presentation/last_week_tt.png", dpi=1000)
+plt.savefig(f"{save_file}/last_week_tt.png", dpi=1000)
 plt.show()

@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3, venn3_unweighted
+import os
+save_file = os.getcwd()
 tests = ["LT", "DC", "TT"] # bend test should never take more than 1-2 days
 
 Y = f"\x1b[32m √ \x1b[0m"
@@ -45,10 +47,11 @@ v.get_patch_by_id("011").set_color("orange")
 v.get_patch_by_id("101").set_color("orange")
 
 v.get_patch_by_id("111").set_color("green")
-
+for text in v.set_labels:
+    text.set_fontsize(8)
 from datetime import datetime
 today = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
 plt.title(f"Tube Room Tubes on {today}\n Total:{total}")
-
+plt.savefig(f"{save_file}/tubepopulation.png")
 plt.show()
