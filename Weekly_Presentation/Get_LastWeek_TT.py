@@ -77,5 +77,5 @@ ax.text(0.25, 0.55, f"  Over 380g: {number_over} tube(s)",
         transform=ax.transAxes)
 
 ax.set_xticks(bins)
-plt.savefig(f"{save_file}/last_week_tt.png", dpi=1000)
+plt.savefig(f"{save_file}/Weekly_Presentation/last_week_tt.png", dpi=1000)
 plt.show()

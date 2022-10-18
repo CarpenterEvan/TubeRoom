@@ -23,7 +23,7 @@ total = TT + DC + LT + LT_DC + DC_TT + LT_TT + LT_DC_TT
 
 
 
-percent = lambda value: f"({100 * value / total:.2f}%)"
+percent = lambda value: f"({100 * value / total:.2f}%)" if value != 0 else ""
 venn_text = lambda x: f"{x}\n{percent(x)}"
 
 v = venn3_unweighted(subsets = (LT,
@@ -53,5 +53,5 @@ from datetime import datetime
 today = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
 plt.title(f"Tube Room Tubes on {today}\n Total:{total}")
-plt.savefig(f"{save_file}/tubepopulation.png")
+plt.savefig(f"{save_file}/tubepopulation.png", dpi=1000)
 plt.show()

@@ -6,10 +6,10 @@ from GetTubeInfo import get_formatted_tuple
 import GetTubeInfo
 
 __author__ = "Evan Carpenter"
-__verison__ = "6"
+__verison__ = "6.1"
 __doc__ = ''' 
 Verify is meant to handle the logistics of multiple scans.
-counter counts up to 10 and resets, printing a line of ---- when it does. 
+counter counts up to 10 and resets, printing a line of '-' when it does. 
 There are options to save the tubes scanned into a file, or to read tubeids from a file. 
 During a run the data from each tube is saved and summarized at the end in a fancy unicode box. 
 
@@ -38,24 +38,16 @@ dates_summary_dictionary = dict()
 tubeID_set = set()
 
 ############################## Process command line args ###############################
-command_line_arguments = sys.argv
-if len(command_line_arguments)>2:
-    err_string = '''
-    Sorry, but you only get one option at a time!
-    Here are your command options in order of simple to advanced: 
-    'write' to write to a file with a timestamp of today. The file is saved in the same directory as the code. 
-    'check' to automatically check all tube IDs in a file.
-    'search' to input a file. A bell will ding if you scan any tube IDs found in the file.
-    'ordered' to make the ordered file for a mod chamber. Use carefully!
-    '''
-    exit(err_string)
+nexargs = len(sys.argv)-1 # Number of extra arguments 
+first_argument = sys.argv[-nexargs]
 
-WriteFile = command_line_arguments[-1] == "write"  # This is just to record the tubes scanned to a file
-OrderedFile = command_line_arguments[-1] == "ordered" # This saves the tubes in reverse order to a file, 
+
+OrderedFile = (first_argument == "ordered") # This saves the tubes in reverse order to a file, 
 # I call it ordered because the order is very important,  the last tube scanned will be the first tube glued in. 
-
-CheckFile = command_line_arguments[-1] == "check" # going through a file of tubes and putting them through the main function
-SearchFor =  command_line_arguments[-1] == "search" # Still in progress.
+WriteFile   = (first_argument == "write") # This is just to record the tubes scanned to a file
+CheckFile   = (first_argument == "check") # going through a file of tubes and putting them through the main function
+SearchFor   = (first_argument == "search") # Still in progress.
+dont_use_seperator = "-smush" in sys.argv
 
 if WriteFile:
 
@@ -107,6 +99,7 @@ def write_tube_to_file_or_append_to_ordered_list(tubeid):
     elif OrderedFile:
         ordered_list.append(tubeid + "\n")
     else: pass
+
 def update_counter(tubeid, verify_string, good_tube_dict): 
     global counter
     counter = counter + 1  if counter<=9 else 1 # reset counter after counter = 10
@@ -126,6 +119,7 @@ def update_counter(tubeid, verify_string, good_tube_dict):
         colored_counter =  GetTubeInfo.white_text("") # removing GetTubeInfo.white_text messes with padding
 
     return colored_counter
+
 def add_to_summary_dictionaries(date_string, good_tube_dict):
     if date_string not in dates_summary_dictionary.keys():
         dates_summary_dictionary[date_string] = 0
@@ -148,14 +142,14 @@ def finish_writing_files():
         OrderedIDs.writelines(ordered_list)
         OrderedIDs.close()
     else: pass
+
 def compile_summary_dictionaries():
     # find the max value, find how many characters it is, pick the bigger one
     if len(dates_summary_dictionary) == 0:
         dates_summary_dictionary["xxxx-xx-xx"] = 0
         longest_number = 1
     else:
-        longest_number = max(len(str(sum(dates_summary_dictionary.values()))),\
-                            len(str(sum(tests_summary_dictionary.values())))) 
+        longest_number = len(str(sum(dates_summary_dictionary.values())))
     
 
     gc = GetTubeInfo.green_text(chr(10003)) # green check ✓
@@ -182,6 +176,7 @@ def compile_summary_dictionaries():
     elif len(dates_list) > len(tests_list): # dates box is longer than tests box
         tests_list += filler_list(width_of_tests_list)
     return dates_list, dates_total, width_of_dates_list, tests_list, width_of_tests_list
+
 def print_summary_dictionary_and_exit():
         finish_writing_files()
 
@@ -220,7 +215,6 @@ def print_summary_dictionary_and_exit():
         exit("\n")
 
 def main(inputs):
-
     tubeid = inputs
 
     if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]:
@@ -229,7 +223,6 @@ def main(inputs):
         print("\a", end="\033[1A")
     else: pass
 
-    
     verify_string, good_tube_dict = get_formatted_tuple(tubeid)
 
     colored_counter = update_counter(tubeid, verify_string, good_tube_dict)
@@ -245,8 +238,8 @@ def main(inputs):
 
     print("", end="\033[1A")
     print(f"{verify_string} {colored_counter: >11}")
-        
-    if counter == 10:
+
+    if counter == 10 and not dont_use_seperator:
         print("-"*170)
 
     return tubeid
@@ -268,6 +261,7 @@ def test_case():
     main("MSU03909"); print(" ")
     main("stop")
     return 0
+
 if __name__ == "__main__":
 
     if sys.argv[-1]=="test":
@@ -303,4 +297,3 @@ if __name__ == "__main__":
         for tube in newlist: 
             main(tube)
             print(" ")
-    
