@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
 import os
-save_file = os.getcwd()
+save_file = os.path.abspath("")
 print("\n" + save_file)
 today = datetime.datetime.today()
 week_ago = today - datetime.timedelta(days = 7)
@@ -77,5 +77,5 @@ ax.text(0.25, 0.55, f"  Over 380g: {number_over} tube(s)",
         transform=ax.transAxes)
 
 ax.set_xticks(bins)
-plt.savefig(f"{save_file}/Weekly_Presentation/last_week_tt.png", dpi=1000)
-plt.show()
+plt.savefig(f"{save_file}/last_week_tt.png", dpi=1000)
+#plt.show()

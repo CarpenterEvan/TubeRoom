@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3, venn3_unweighted
 import os
-save_file = os.getcwd()
+save_file = os.path.abspath("")
 tests = ["LT", "DC", "TT"] # bend test should never take more than 1-2 days
 
 Y = f"\x1b[32m √ \x1b[0m"
@@ -54,4 +54,4 @@ today = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
 plt.title(f"Tube Room Tubes on {today}\n Total:{total}")
 plt.savefig(f"{save_file}/tubepopulation.png", dpi=1000)
-plt.show()
+#plt.show()
