@@ -49,7 +49,7 @@ I also reccomend downloading [Google Drive Desktop](https://www.google.com/drive
 I want to scan the barcode ID on a tube and check from the Database file what tests it has passed. 
 I will be doing this for thousands of tubes, so I want it to be quick, easy, and compact. 
 99% of the time, I will be scanning 10 tubes at a time, very fast, then checking if those 10 pass.
-- `python Verify.py save` will save all IDs scanned into a file, you can then re-run all of the IDs in that file with `python Verify.py check`
+- `python Verify.py write` will save all IDs scanned into a file, you can then re-run all of the IDs in that file with `python Verify.py check`
 
 ###    `DCHeader.py` 
 I want to create a new .log file that will be synced with the google drive. It must be labeled with the correct date, 
