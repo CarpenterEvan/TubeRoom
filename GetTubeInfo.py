@@ -1,11 +1,12 @@
                                                                         #
 __author__ = "Evan Carpenter"
 __version__ = "4.1"
-import re
 import os
-from re import match
-import pandas as pd
+import re
 from datetime import datetime, timedelta
+from re import match
+
+import pandas as pd
 
 home = os.path.expanduser("~")
 home_to_google_drive_database = os.path.expanduser("~/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
@@ -42,17 +43,25 @@ def color_string(string, goal):
         
 def copy_DB_file_if_available():
     '''
-    You never know when you'll be offline (or at least, I dont know when ILL be offline...), if you have access to the GDrive, 
+    You never know when you'll be offline (or at least, I dont know when I'LL be offline...), if you have access to the GDrive, 
     this function will copy a version into the cwd to have an updated version ready. 
     '''
-    operating_system = os.uname().sysname # "Darwin"==Mac "Linux"==Linux "Windows"==Windows
+    if os.path.exists(home_to_google_drive_database) !=True:
+        return 0
+    else: pass
+    time_last_downloaded = datetime.fromtimestamp(os.path.getmtime(path_to_local))
+    days_since_last_downloaded = (datetime.now() - time_last_downloaded).days
 
-    if operating_system != "Windows":
-        copy_command = "cp"
-    else: 
-        copy_command = "copy"
-
-    os.system(f"{copy_command} '{home_to_google_drive_database}' {path_to_local}")
+    if days_since_last_downloaded >=1:
+        operating_system = os.uname().sysname # "Darwin"==Mac "Linux"==Linux "Windows"==Windows
+        if operating_system != "Windows":
+            copy_command = "cp"
+        else: 
+            copy_command = "copy"
+        os.system(f"{copy_command} '{home_to_google_drive_database}' {path_to_local}")
+        print("(Local file updated just now)")
+    else:
+        pass
 
 def format_database():
     '''Opens Google Drive path to get to the .txt file in the shared drive, 
@@ -65,7 +74,8 @@ def format_database():
                         memory_map = True,
                         dtype=str).dropna(axis=0)
         path_used = home_to_google_drive_database
-        copy_DB_file_if_available()
+       
+        
 
     except FileNotFoundError:
 
@@ -94,6 +104,7 @@ def format_database():
 
         print(f"Database File is from: {path_used}")
         print(f"and was Last Updated: ", datetime.fromtimestamp(os.path.getmtime(path_used)))
+        copy_DB_file_if_available()
 
     df = df.applymap(lambda string: " ".join(string.split())) # "1   2 3     4  5"  -->  "1 2 3 4 5"
     df = df.applymap(lambda string: string.split(" ")) # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
@@ -120,7 +131,12 @@ def locate_tube_row(input_tubeID:str):
 
     defaults = {"d": "MSU05122", # default (good)
                 "f": "MSU01341", # fails multiple tests
-                "b": "MSU00229"} # bad, multiple tests missing, good for testing "-----"
+                "b": "MSU00229",# bad, multiple tests missing, good for testing "-----"
+                "t1": "MSU00482",
+                "t2": "MSU02589",
+                "t3": "MSU01914",
+                "t4": "MSU03153",
+                "t5": "MSU03909"} 
 
     tubeID = input_tubeID
     try:
@@ -222,11 +238,13 @@ def format_tension(row):
         T1_tension  = float(row["T1_tension"])
         T1_length   = float(row["T1_length"])
         valid_T1_string = True
+        T1_length_pad = f"{T1_length:0<7}"
+        T1_length_colored = white_text(T1_length_pad) if T1_length>=1623.75 and T1_length<=1625.25 else red_text(T1_length_pad)
     except ValueError:
         
         T1_date = "01-01-01"
         T1_tension  = 0.
-        T1_length   = 0.
+        T1_length_colored   = white_text("0.00")
         valid_T1_string = False
         
     try:
@@ -301,7 +319,7 @@ def format_tension(row):
     else: 
         T2_days_delta = white_text("---")
 
-    return T1_date, T1_tension, T1_length, T2_date, T2_tension, T2_days_delta
+    return T1_date, T1_tension, T1_length_colored, T2_date, T2_tension, T2_days_delta
 
 def format_values(row:dict):
     '''
@@ -395,7 +413,7 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
     print_list = [f"{value['ID']}",
                   f"{value['Ship_Date']: <10}", 
                   f"Bend: {value['Bend_Flag']: <12}",
-                  f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']:0<7}mm",
+                  f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']: >16}mm",
                   f"T2 on {value['T2_Date']: <9}(∆{value['T2_time_delta']: >12}) {value['T2_Flag']: <15} {value['T2_Tension']:0<7}g",
                   f"DC on {value['DC_Date']} {value['DC_DC']: >6}nA {value['DC_Time']: ^19} {value['DC_Flag']: >13}"]
     if (row["Final_flag"] == "OK") or (row["Final_flag"] == "YES") and good_tube:

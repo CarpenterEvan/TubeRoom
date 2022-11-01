@@ -47,7 +47,10 @@ OrderedFile = (first_argument == "ordered") # This saves the tubes in reverse or
 WriteFile   = (first_argument == "write") # This is just to record the tubes scanned to a file
 CheckFile   = (first_argument == "check") # going through a file of tubes and putting them through the main function
 SearchFor   = (first_argument == "search") # Still in progress.
+
 dont_use_seperator = "-smush" in sys.argv
+no_color_bool = "-bland" in sys.argv
+in_tube_room = True # want to make master file with all tubes in tube room in this
 
 if WriteFile:
 
@@ -95,7 +98,7 @@ def write_tube_to_file_or_append_to_ordered_list(tubeid):
     '''This adds a line to the written file or adds a tube to the ordered file. 
     I keep the ordered version as a list so it can be reversed in order at the end.'''
     if WriteFile:
-        VerifiedIDs.writelines(tubeid)
+        VerifiedIDs.write(tubeid + "\n")
     elif OrderedFile:
         ordered_list.append(tubeid + "\n")
     else: pass
@@ -133,8 +136,17 @@ def add_to_summary_dictionaries(date_string, good_tube_dict):
     tests_summary_dictionary[f"BT_{Bend}_TT_{Tens}_DC_{DC}"] += 1
     dates_summary_dictionary[date_string] += 1
 
+def add_to_master_list(tubeid):
+    tubeID_set += tubeid
+
 def finish_writing_files():
     '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
+    with open("TubeRoomMasterList.txt", "r") as MasterListInput:
+        output = set()
+        output.update(MasterListInput.read().split("\n"))
+        output.update(tubeID_set)
+        with open("TubeRoomMasterList.txt", "w") as MasterListOutput:
+            MasterListOutput.write('\n'.join(sorted(output)) + '\n')
     if WriteFile:
         VerifiedIDs.close()
     elif OrderedFile:
@@ -223,7 +235,7 @@ def main(inputs):
         print("\a", end="\033[1A")
     else: pass
 
-    verify_string, good_tube_dict = get_formatted_tuple(tubeid)
+    verify_string, good_tube_dict = get_formatted_tuple(tubeid, suppress_colors=no_color_bool)
 
     colored_counter = update_counter(tubeid, verify_string, good_tube_dict)
 
@@ -254,17 +266,19 @@ def test_case():
     main("d"); print(" ")
     main("f"); print(" ")
     main("b"); print(" ")
-    main("MSU00482"); print(" ")
-    main("MSU02589"); print(" ")
-    main("MSU01914"); print(" ")
-    main("MSU03153"); print(" ")
-    main("MSU03909"); print(" ")
+    main("t1"); print(" ")
+    main("t2"); print(" ")
+    main("t3"); print(" ")
+    main("t4"); print(" ")
+    main("t5"); print(" ")
     main("stop")
     return 0
 
+######################################## Main ########################################
+
 if __name__ == "__main__":
 
-    if sys.argv[-1]=="test":
+    if first_argument=="test":
             test_case()
 
     if not CheckFile:

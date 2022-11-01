@@ -15,14 +15,32 @@
     5)  Writing to the file, I take the lines from the example file and replace the strings with the variables defined in the code
             I write with "a" to append, to further minimize the possibility of overwriting data
 '''
+local_template = '''Dark_Current_Measurement_Station        0
+Operator        Name
+StartDateTime   2022-XX-XX XX:XX:00
+Temperature(C)  XX
+Humidity(%)     XX
+GasVolumesFlushed(L)    2
+GasFlowRate     1.0
+GasPressure(mbar)       3100
+GasMixture      92%Ar+8%CO2
+HighVoltageSet(V)       2900
+MappingToBoards CAEN4-00 CAEN4-01 CAEN4-02 CAEN4-03 CAEN4-04 CAEN4-05 CAEN4-06 CAEN4-07 CAEN4-08 CAEN4-09 CAEN4-10 CAEN4-11 CAEN4-12 CAEN4-13 CAEN4-14 CAEN4-15 CAEN4-16 CAEN4-17 CAEN4-18 CAEN4-19 CAEN4-20 CAEN4-21 CAEN4-22 CAEN4-23 CAEN1-00 CAEN1-01 CAEN1-02 CAEN1-03 CAEN1-04 CAEN1-05 CAEN1-06 CAEN1-07 CAEN1-08 CAEN1-09 CAEN1-10 CAEN1-11 CAEN1-12 CAEN1-13 CAEN1-14 CAEN1-15 CAEN1-16 CAEN1-17 CAEN1-18 CAEN1-19 CAEN1-20 CAEN1-21 CAEN1-22 CAEN1-23
+HVpowerSupplyID    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN4    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1    CAEN1
+Pedestal(nA)         0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0      0.0
+HighVoltage(V)      2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900     2900
+TubeID           
+DateTime        North-00 North-01 North-02 North-03 North-04 North-05 North-06 North-07 North-08 North-09 North-10 North-11 North-12 North-13 North-14 North-15 North-16 North-17 North-18 North-19 North-20 North-21 North-22 North-23 South-00 South-01 South-02 South-03 South-04 South-05 South-06 South-07 South-08 South-09 South-10 South-11 South-12 South-13 South-14 South-15 South-16 South-17 South-18 South-19 South-20 South-21 South-22 South-23
+'''
 
+#exit(print(local_template.split("\n")))
 from datetime import date, datetime
 import os
 in_file_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # ex. 2022-09-07 09:47:06
 date_for_file_name = date.today().strftime("%Y%m%d")   # ex. 20220927
 
 home = os.path.expanduser("~")
-GDrive_to_DB = os.path.relpath("Google Drive/Shared drives/sMDT Tube Testing Reports")
+GDrive_to_DB = os.path.relpath("Google Drive/Shareed drives/sMDT Tube Testing Reports")
 home_to_DB = os.path.join(home, GDrive_to_DB) 
 home_to_processed = os.path.join(home_to_DB, "Processed")
 
@@ -30,7 +48,7 @@ if os.path.exists(home_to_DB):
     path_to_Google_or_Local_file = os.path.join(home_to_DB, "CAEN")
 else:
     print(f"\nCould not find Google Drive Desktop!") 
-    path_to_Google_or_Local_file = os.path.join(os.getcwd(), "DC")
+    path_to_Google_or_Local_file = os.getcwd()
 
 path_to_template = os.path.join(path_to_Google_or_Local_file, "_CAENPS_2022MMDD_template.log")
 
@@ -181,20 +199,26 @@ def variable_length_mapping(string:str, number_of_spaces_between_values:int):
     string_with_correct_number_of_values = str(" "* number_of_spaces_between_values).join(correctly_sized_list)
     return beginning_info + " " * number_of_spaces_between_values + string_with_correct_number_of_values + "\n"
 
+
+
 def write_to_file(ID_string):
-    with open(path_to_template, 'r') as Template:
-        with open(file_path, 'a') as Output:
+    if os.path.exists(path_to_template):
+        with open(path_to_template, 'r') as Template:
             lines = Template.readlines()
-            Output.writelines(lines[0])
-            Output.writelines(lines[1].replace("Name", f"{operator}"))
-            Output.writelines(lines[2].replace("2022-XX-XX XX:XX:00", in_file_date))
-            Output.writelines(lines[3:10])
-            Output.writelines(variable_length_mapping(lines[10], 1)) # Excuse the boilerplate,
-            Output.writelines(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
-            Output.writelines(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
-            Output.writelines(variable_length_mapping(lines[13], 5))
-            Output.writelines(lines[14][0:17] + ID_string + "\n")
-            Output.writelines(variable_length_mapping(lines[15], 1))
+    else: 
+        lines = local_template.split("\n")
+    with open(file_path, 'a') as Output:
+        print(lines)
+        Output.write(lines[0] + "\n")
+        Output.write(lines[1].replace("Name", f"{operator}") + "\n")
+        Output.write(lines[2].replace("2022-XX-XX XX:XX:00", in_file_date) + "\n")
+        Output.writelines(line + "\n" for line in lines[3:10])
+        Output.write(variable_length_mapping(lines[10], 1) + "\n") # Excuse the boilerplate,
+        Output.write(variable_length_mapping(lines[11], 4) + "\n") # but I will not change the spacing between the values in the template file. 
+        Output.write(variable_length_mapping(lines[12], 6) + "\n") # Maybe there is still an even more clever solution to this though!
+        Output.write(variable_length_mapping(lines[13], 5) + "\n")
+        Output.write(lines[14][0:17] + ID_string + "\n" + "\n")
+        Output.write(variable_length_mapping(lines[15], 1) + "\n")
 
 def main():
     ID_string = get_id_string()

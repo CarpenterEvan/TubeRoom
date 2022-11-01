@@ -1,21 +1,34 @@
-top_left, top_right = chr(9556), chr(9559)
-spacer  = chr(9552)*19 
-wall = chr(9553)
-separator_left, separator_right = chr(9568), chr(9571)
-bot_left, bot_right = chr(9562), chr(9565)
+import os
+import re
+import matplotlib.pyplot as plt
+from GetTubeInfo import id_to_values
+lengths = []
+with open("Verifying/Verified_2022102812.txt", "r") as file:
+	for i in file.readlines():
+		tubeid = i.strip("\n")
+		value, good = id_to_values(tubeid)
+		lengths.append(float(re.sub("\\x1b\[[0-9]*m", "", value["T1_Length"])))
+lengths.append(1625.45)
+bins = [1625.25, 1625.35, 1625.45, 1625.55, 1625.65, 1625.75, 1625.85, 1625.95]
+n, bins, patches = plt.hist(lengths, bins=bins)
 
 
-cap_of_box =          top_left + spacer + top_right
-box_entry = lambda item:  wall +  item  + wall
-box_seperator = separator_left + spacer + separator_right
-U_of_box =            bot_left + spacer + bot_right
+bin_centers = [patch._x0 + patch._width/2 for patch in patches]
 
-print(chr(9552), wall, top_left, top_right , bot_left, bot_right, separator_left, separator_right)
-print(chr(9552), chr(9553), chr(9556), chr(9559) , chr(9562), chr(9565), chr(9568), chr(9571))
-print(chr(9552), chr(9553), chr(9556), chr(9559) , chr(9562), chr(9565), chr(9568), chr(9571))
+for index, value in enumerate(n):
+    print(int(value))
+    num_tubes = int(value)
+    plt.text(bin_centers[index], value,
+            f"{num_tubes}",
+            color="r", 
+            horizontalalignment='center', 
+            verticalalignment="bottom")
 
-
-
+plt.xticks(ticks=bins, labels=list(map(str, bins)))
+plt.title("Distribution of tubes that are too long (but pass all other tests)")
+plt.xlabel("Length (mm)")
+plt.ylabel("# Tubes")
+plt.show()
 
 '''
 ╔═══════════════════╗  ╔═════════════════════╗
