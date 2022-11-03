@@ -270,7 +270,6 @@ def test_case():
     main("t2"); print(" ")
     main("t3"); print(" ")
     main("t4"); print(" ")
-    main("t5"); print(" ")
     main("stop")
     return 0
 

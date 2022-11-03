@@ -16,24 +16,17 @@ processed_folder = Path.joinpath(TubeTension, "Processed")
 
 df = pd.DataFrame(columns = ["Operator", "Date", "tubeID", "Length", 
                              "Density", "Frequency", "Tension", "TensionError"])
-for file in TubeTension.glob("*.log"):
+for file in TubeTension.glob("**/*.log"):
     file_name = file.name[8:16]
     date_of_file = datetime.datetime.strptime(file_name, "%Y%m%d")
+   
     within_last_week = date_of_file > week_ago
     if within_last_week:
+        
         try: 
             this_file = pd.read_csv(file, sep="\t")
             df = pd.concat([df, this_file], ignore_index=True)
-        except pd.errors.ParserError: 
-            print(file)
-for file in processed_folder.glob("*.log"):
-    file_name = file.name[8:16]
-    date_of_file = datetime.datetime.strptime(file_name, "%Y%m%d")
-    within_last_week = date_of_file > week_ago
-    if within_last_week:
-        try: 
-            this_file = pd.read_csv(file, sep="\t")
-            df = pd.concat([df, this_file], ignore_index=True)
+            print(date_of_file, len(this_file), len(df))
         except pd.errors.ParserError: 
             print(file)
 

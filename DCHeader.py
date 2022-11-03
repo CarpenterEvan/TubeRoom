@@ -40,7 +40,7 @@ in_file_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # ex. 2022-09-07 09:
 date_for_file_name = date.today().strftime("%Y%m%d")   # ex. 20220927
 
 home = os.path.expanduser("~")
-GDrive_to_DB = os.path.relpath("Google Drive/Shareed drives/sMDT Tube Testing Reports")
+GDrive_to_DB = os.path.relpath("Google Drive/Shared drives/sMDT Tube Testing Reports")
 home_to_DB = os.path.join(home, GDrive_to_DB) 
 home_to_processed = os.path.join(home_to_DB, "Processed")
 
@@ -208,17 +208,16 @@ def write_to_file(ID_string):
     else: 
         lines = local_template.split("\n")
     with open(file_path, 'a') as Output:
-        print(lines)
-        Output.write(lines[0] + "\n")
-        Output.write(lines[1].replace("Name", f"{operator}") + "\n")
-        Output.write(lines[2].replace("2022-XX-XX XX:XX:00", in_file_date) + "\n")
-        Output.writelines(line + "\n" for line in lines[3:10])
-        Output.write(variable_length_mapping(lines[10], 1) + "\n") # Excuse the boilerplate,
-        Output.write(variable_length_mapping(lines[11], 4) + "\n") # but I will not change the spacing between the values in the template file. 
-        Output.write(variable_length_mapping(lines[12], 6) + "\n") # Maybe there is still an even more clever solution to this though!
-        Output.write(variable_length_mapping(lines[13], 5) + "\n")
-        Output.write(lines[14][0:17] + ID_string + "\n" + "\n")
-        Output.write(variable_length_mapping(lines[15], 1) + "\n")
+        Output.write(lines[0])
+        Output.write(lines[1].replace("Name", f"{operator}"))
+        Output.write(lines[2].replace("2022-XX-XX XX:XX:00", in_file_date))
+        Output.writelines(lines[3:10])
+        Output.write(variable_length_mapping(lines[10], 1)) # Excuse the boilerplate,
+        Output.write(variable_length_mapping(lines[11], 4)) # but I will not change the spacing between the values in the template file. 
+        Output.write(variable_length_mapping(lines[12], 6)) # Maybe there is still an even more clever solution to this though!
+        Output.write(variable_length_mapping(lines[13], 5))
+        Output.write(lines[14][0:17] + ID_string + "\n")
+        Output.write(variable_length_mapping(lines[15], 1))
 
 def main():
     ID_string = get_id_string()

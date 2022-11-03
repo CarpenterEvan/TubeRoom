@@ -9,6 +9,8 @@ N = f"\x1b[31m X \x1b[0m"
 
 tape_marker = lambda A, B, C: f"LT {A} DC {B} TT {C}: "
 
+no_tests = int(input(tape_marker(N,N,N)))
+
 TT = int(input(tape_marker(N,N,Y)) )
 DC = int(input(tape_marker(N,Y,N)))
 LT = int(input(tape_marker(Y,N,N)))
@@ -19,7 +21,7 @@ LT_TT = int(input(tape_marker(Y,N,Y)))
 
 LT_DC_TT = int(input(tape_marker(Y,Y,Y)))
 
-total = TT + DC + LT + LT_DC + DC_TT + LT_TT + LT_DC_TT
+total = TT + DC + LT + LT_DC + DC_TT + LT_TT + LT_DC_TT + no_tests
 
 
 
@@ -38,6 +40,7 @@ v = venn3_unweighted(subsets = (LT,
 											  f"Have only Tension Test\n(Tests Left: {LT+DC+LT_DC})"),
 								subset_label_formatter= venn_text
 								)
+plt.text(0.5,-0.4, f"No tests yet: {no_tests}")
 v.get_patch_by_id("100").set_color("red")
 v.get_patch_by_id("010").set_color("red")
 v.get_patch_by_id("001").set_color("red")
