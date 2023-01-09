@@ -8,9 +8,13 @@ from re import match
 
 import pandas as pd
 
-home = os.path.expanduser("~")
+terminal_width = os.get_terminal_size().columns - 3 
+# I subtract 3 so that when I use this width to fill a line with "-", it doesn't create a new line when the input is ""
+# Why 3? It was the smallest number that worked, 15 will work, 2 will not. Why? I don't know. 
+
+
 home_to_google_drive_database = os.path.expanduser("~/Google Drive/Shared drives/sMDT Tube Testing Reports/TUBEDB.txt")
-path_to_local = os.path.join(os.getcwd(), "TUBEDB.txt") # os.path.join(os.path.abspath(""), "Verifying", "TUBEDB.txt")
+path_to_local = os.path.join(os.getcwd(), "TUBEDB.txt") 
 
 
 __doc__ = '''
@@ -107,16 +111,14 @@ def format_database():
         copy_DB_file_if_available()
 
     df = df.applymap(lambda string: " ".join(string.split())) # "1   2 3     4  5"  -->  "1 2 3 4 5"
-    df = df.applymap(lambda string: string.split(" ")) # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
-
+    df = df.applymap(lambda string: string.split(" "))        # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
     ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
     T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
     T2 = pd.DataFrame(df["T2"].tolist()[2:], columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
     DC = pd.DataFrame(df["DC"].tolist()[2:], columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
-    FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment",   "None", "None"])
-
+    FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment1", "Comment2", "Comment3"], dtype=str)
+    FV["Comment"] = FV["Comment1"] + FV["Comment2"] + FV["Comment3"]
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
-
     return newdf
 
 DB = format_database()
@@ -156,7 +158,7 @@ def locate_tube_row(input_tubeID:str):
         return tuberow_index     
 
     except ValueError: # This means the ID is valid but not in the DB
-        return -2 
+        return -1
         
 def filter_columns(tuberow_index):
     '''Given a specific row, filter out the values of interest (*). 
@@ -192,30 +194,31 @@ def filter_columns(tuberow_index):
        || Name: 4407, dtype: object|| 
        -------------------------------''' 
     fullrow = DB.iloc[tuberow_index]
-    row = {"tubeID"           :    fullrow.tubeID,
+    row = {"tubeID"           :        fullrow.tubeID,
 
-           "Shipment_date"    :  fullrow.Received,
+           "Shipment_date"    :      fullrow.Received,
 
-           "Bend_flag"        :     fullrow.flagE,
-           "T1_date"          :    fullrow.T1Date,
-           "T1_length"        :    fullrow.Length,
+           "Bend_flag"        :         fullrow.flagE,
+           "T1_date"          :        fullrow.T1Date,
+           "T1_length"        :        fullrow.Length,
 
-           "T1_tension"       :   fullrow.Tension,
-           "T1_flag"          :      fullrow.flag,
-
-
-           "T2_tension_delta" :  fullrow.dTension,
-           "T2_time_delta"    :     fullrow.dDays,
-           "T2_flag"          :     fullrow.flag2,
-
-           "DC_date"          :     fullrow.DCday,
-
-           "DC_DC"            :        fullrow.DC,
-           "DC_seconds"       : fullrow.HVseconds,
-           "DC_flag"          :    fullrow.DCflag,
+           "T1_tension"       :       fullrow.Tension,
+           "T1_flag"          :          fullrow.flag,
 
 
-           "Final_flag"       :        fullrow.ok}
+           "T2_tension_delta" :      fullrow.dTension,
+           "T2_time_delta"    :         fullrow.dDays,
+           "T2_flag"          :         fullrow.flag2,
+
+           "DC_date"          :         fullrow.DCday,
+
+           "DC_DC"            :            fullrow.DC,
+           "DC_seconds"       :     fullrow.HVseconds,
+           "DC_flag"          :        fullrow.DCflag,
+
+
+           "Final_flag"       :            fullrow.ok,
+           "IS_UM"            :  "UofM" if fullrow.Comment=="UM" else " MSU"}
     return row
 
 def format_tension(row):
@@ -333,8 +336,6 @@ def format_values(row:dict):
     '''
     tubeID = row["tubeID"]
     shipment_date_string = row["Shipment_date"].strip()
-    shipment_date = datetime.strptime(shipment_date_string, "%Y-%m-%d")
-
     Bend_flag, Bend_passed = color_string(row["Bend_flag"], "PASS") # string Bend_flag, boolean Bend_passed
     T1_flag, T1_passed = color_string(row["T1_flag"], "pass")
     T2_flag, T2_passed = color_string(row["T2_flag"], "Pass2")
@@ -355,7 +356,7 @@ def format_values(row:dict):
         DC_seconds = DC_total_time_in_seconds - DC_minutes * 60 - DC_hours * 3600
         DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}"
 
-        DC_pass:bool = (DC_hours>=4) and DC_passed
+        DC_pass:bool = DC_passed
         DC_total_time_colored = white_text(DC_total_time) if (DC_hours>=4) else red_text(DC_total_time)
 
     except ValueError:
@@ -365,7 +366,7 @@ def format_values(row:dict):
 
     good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
     #good_tube = all([Bend_passed, T1_passed, T2_passed, DC_pass])
-    value_dict = {"ID": tubeID,
+    value_dict = {"ID": tubeID, "IS_UM": row["IS_UM"],
                   "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
                   "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
                   "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension, "T2_time_delta": T2_days_delta, 
@@ -394,23 +395,21 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
                                 "T2 on -------- (∆---) -----  ---.---g", 
                                 "DC on -------- ---.--nA  --:--:--   ---", 
                                 "Final: --- "])
-
-    filler_string = "-"*len(error_string)
+    
+    filler_string = "-" * terminal_width
     
     if tuberow == -1:
         return filler_string, {"filler": False}
-    elif tuberow == -2:
-        return error_string, {"error": False}
     else: 
         pass
 
 
     row = filter_columns(tuberow)
-
     value, good_tube_dict = format_values(row)
     good_tube = all(good_tube_dict.values())
 
     print_list = [f"{value['ID']}",
+                  f"{value['IS_UM']}",
                   f"{value['Ship_Date']: <10}", 
                   f"Bend: {value['Bend_Flag']: <12}",
                   f"T1 on {value['T1_Date']} {value['T1_Flag']: <12} {value['T1_Tension']:0<7}g {value['T1_Length']: >16}mm",
@@ -422,18 +421,41 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
         Final_flag = red_text(row["Final_flag"])
 
     print_list.append(f"Final: {Final_flag: <12}")
-    final_string = f" | ".join(print_list)
+    
     # Why put this at the end? Because I like colors and think they should be fundamentally default
     # and I've already coded the padding in print_list and don't want to re-write the boolean checks to 
     # color the strings properly after they've been created. 
     if suppress_colors: 
-        final_string = re.sub("\\x1b\[[0-9]*m", "", final_string)
-    return final_string, good_tube_dict
+        print_list = [re.sub("\\x1b\[[0-9]*m", "", string) for string in print_list]
+    return print_list, good_tube_dict
 
 def id_to_values(input_tubeID:str):
     '''Quick and easy use of functions to return the dictionaries of values. 
-    This function does not handle errors from locate_tube_row'''
+    This function does not handle errors from locate_tube_row
+    returns: 
+        value_dict = {"ID":             tubeID, 
+                      "IS_UM":          row["IS_UM"],
+                      "Ship_Date":      shipment_date_string, 
+                      "Bend_Flag":      Bend_flag,
+                      "T1_Date":        T1_date, 
+                      "T1_Flag":        T1_flag, 
+                      "T1_Tension":     T1_tension, 
+                      "T1_Length":      T1_length,
+                      "T2_Date":        T2_date, 
+                      "T2_Flag":        T2_flag, 
+                      "T2_Tension":     T2_tension, 
+                      "T2_time_delta":  T2_days_delta, 
+                      "DC_Date":        DC_date, 
+                      "DC_DC":          DC_DC, 
+                      "DC_Time":        DC_total_time_colored, 
+                      "DC_Flag":        DC_flag}
+        good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
+    
+    '''
     tuberow_index = locate_tube_row(input_tubeID)
-    row = filter_columns(tuberow_index)
-    value_dict, good_tube_dict = format_values(row)
-    return value_dict, good_tube_dict
+    if tuberow_index == -1:
+        return "error"
+    else: 
+        row = filter_columns(tuberow_index)
+        value_dict, good_tube_dict = format_values(row)
+        return value_dict, good_tube_dict

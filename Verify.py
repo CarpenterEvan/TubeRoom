@@ -6,7 +6,7 @@ from GetTubeInfo import get_formatted_tuple
 import GetTubeInfo
 
 __author__ = "Evan Carpenter"
-__verison__ = "6.1"
+__verison__ = "6.2"
 __doc__ = ''' 
 Verify is meant to handle the logistics of multiple scans.
 counter counts up to 10 and resets, printing a line of '-' when it does. 
@@ -19,6 +19,13 @@ Since this uses GetTubeInfo all of the depencencies related to the Google Drive 
 if Google Drive desktop cannot be found, the code will look for TUBEDB.txt in the same folder as Verify.py
 '''
 
+### Potential Updates: 
+#    Warning: Currently, allowing for updating the DB live, during a run of this code
+#             is something I have considered, but it could also break the current method 
+#             of making the summary of the tubes. 
+#
+#
+#
 
 ################################## Pre-defined values ##################################
 global counter, dates_summary_dictionary, tests_summary_dictionary, tubeID_set
@@ -34,12 +41,15 @@ tests_summary_dictionary = {"BT_pass_TT_pass_DC_pass":0,
                             "BT_pass_TT_fail_DC_fail":0,
 
                             "BT_fail_TT_fail_DC_fail":0}
-dates_summary_dictionary = dict()
-tubeID_set = set()
+table_dictionary = {"BT":0, "TT":0, "DC":0}
 
+dates_summary_dictionary = dict()
+table_summary_dictionary = dict()
+tubeID_set = set()
+terminal_width = GetTubeInfo.terminal_width
 ############################## Process command line args ###############################
-nexargs = len(sys.argv)-1 # Number of extra arguments 
-first_argument = sys.argv[-nexargs]
+Nexargs = len(sys.argv)-1 # Number of extra arguments 
+first_argument = sys.argv[-Nexargs]
 
 
 OrderedFile = (first_argument == "ordered") # This saves the tubes in reverse order to a file, 
@@ -50,7 +60,7 @@ SearchFor   = (first_argument == "search") # Still in progress.
 
 dont_use_seperator = "-smush" in sys.argv
 no_color_bool = "-bland" in sys.argv
-in_tube_room = True # want to make master file with all tubes in tube room in this
+
 
 if WriteFile:
 
@@ -124,29 +134,26 @@ def update_counter(tubeid, verify_string, good_tube_dict):
     return colored_counter
 
 def add_to_summary_dictionaries(date_string, good_tube_dict):
+    if "filler" in good_tube_dict.keys():
+        return 0
     if date_string not in dates_summary_dictionary.keys():
         dates_summary_dictionary[date_string] = 0
     else: pass
-
+    
     boolean_to_pass_fail = lambda boolean: "pass" if boolean else "fail"
-    Bend = boolean_to_pass_fail(good_tube_dict["Bend"])
-    Tens = boolean_to_pass_fail(good_tube_dict["T1"] and good_tube_dict["T2"])
-    DC =  boolean_to_pass_fail(good_tube_dict["DC"])
+    try:
+        Bend = boolean_to_pass_fail(good_tube_dict["Bend"])
+        Tens = boolean_to_pass_fail(good_tube_dict["T1"] and good_tube_dict["T2"])
+        DC =  boolean_to_pass_fail(good_tube_dict["DC"])
+    except KeyError:
+        print(good_tube_dict)
+        exit("Uh oh, a key error was found.\nI'm expecting the keys to be 'Bend', 'T1', 'T2', 'DC'")
 
     tests_summary_dictionary[f"BT_{Bend}_TT_{Tens}_DC_{DC}"] += 1
     dates_summary_dictionary[date_string] += 1
 
-def add_to_master_list(tubeid):
-    tubeID_set += tubeid
-
 def finish_writing_files():
     '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
-    with open("TubeRoomMasterList.txt", "r") as MasterListInput:
-        output = set()
-        output.update(MasterListInput.read().split("\n"))
-        output.update(tubeID_set)
-        with open("TubeRoomMasterList.txt", "w") as MasterListOutput:
-            MasterListOutput.write('\n'.join(sorted(output)) + '\n')
     if WriteFile:
         VerifiedIDs.close()
     elif OrderedFile:
@@ -223,7 +230,9 @@ def print_summary_dictionary_and_exit():
         print(seperator_of_box(width_of_dates_list) + " "*2 + U_of_box(width_of_tests_list))
         print(               box_entry(dates_total) + " "*2 + final_message)
         print(        U_of_box(width_of_dates_list))
-  
+        #print("   date     total  BT  TT  DC")
+        #for date in sorted(table_summary_dictionary):
+        #    print(f"{date}:  {dates_summary_dictionary[date]}   {table_summary_dictionary[date]['BT']}  {table_summary_dictionary#[date]['TT']}  {table_summary_dictionary[date]['DC']}")
         exit("\n")
 
 def main(inputs):
@@ -235,11 +244,15 @@ def main(inputs):
         print("\a", end="\033[1A")
     else: pass
 
-    verify_string, good_tube_dict = get_formatted_tuple(tubeid, suppress_colors=no_color_bool)
+    print_list, good_tube_dict = get_formatted_tuple(tubeid, suppress_colors=no_color_bool)
+    if "filler" not in good_tube_dict.keys() and "error" not in good_tube_dict.keys():
+        verify_string = f" | ".join(print_list)
+    else:
+        verify_string = print_list
 
     colored_counter = update_counter(tubeid, verify_string, good_tube_dict)
 
-    date_string = verify_string[11:21]
+    date_string = print_list[2]
     not_dashes = "---" not in date_string
 
     #This should be self consistent while looking for duplicates in the good/bad dictionary because a tube that is bad on first scan won't update to good while the program is running
@@ -252,12 +265,12 @@ def main(inputs):
     print(f"{verify_string} {colored_counter: >11}")
 
     if counter == 10 and not dont_use_seperator:
-        print("-"*170)
+        print("-" * terminal_width)
 
     return tubeid
 
 def test_case():
-    intro_string = "ID       | Ship. date | Bend test  | 1st-TT  Date        Tension  Length    | 2nd-TT  Date   (days)        Tension  | DC      Date      DC    Time on DC      | Final pass?"
+    intro_string = "ID       |UM/MSU| Ship. date | Bend test  | 1st-TT  Date        Tension  Length    | 2nd-TT  Date   (days)        Tension  | DC      Date      DC    Time on DC      | Final pass?"
     
     print(intro_string)
     print("-"*len(intro_string))
@@ -267,9 +280,25 @@ def test_case():
     main("f"); print(" ")
     main("b"); print(" ")
     main("t1"); print(" ")
+    main("t4"); print(" ")
     main("t2"); print(" ")
     main("t3"); print(" ")
     main("t4"); print(" ")
+    main("d"); print(" ")
+    main("f"); print(" ")
+
+    main("d"); print(" ")
+    main("f"); print(" ")
+    main("b"); print(" ")
+    main("t1"); print(" ")
+    main("t4"); print(" ")
+    main(""); print(" ")
+    main("t2"); print(" ")
+    main("t3"); print(" ")
+    main("t4"); print(" ")
+    main("d"); print(" ")
+    main("f"); print(" ")
+    
     main("stop")
     return 0
 
