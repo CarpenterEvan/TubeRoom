@@ -116,10 +116,12 @@ def format_database():
     T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
     T2 = pd.DataFrame(df["T2"].tolist()[2:], columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
     DC = pd.DataFrame(df["DC"].tolist()[2:], columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
-    FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment1", "Comment2", "Comment3"], dtype=str)
-    FV["Comment"] = FV["Comment1"] + FV["Comment2"] + FV["Comment3"]
+    FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment1", "Comment2", "Comment3"], dtype=str).fillna("")
+    FV["Comment"] = FV["Comment1"] + " " + FV["Comment2"] + " " + FV["Comment3"]
+    FV.drop(["Comment1","Comment2","Comment3"], axis=1, inplace=True)
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
     return newdf
+    
 
 DB = format_database()
 
@@ -188,9 +190,7 @@ def filter_columns(tuberow_index):
        || ENDday          21/07/07 || 21 
        || done?                  3 || 22 
        || ok                   YES || 23 * Final Pass
-       || Comment               UM || 24 
-       || None             BIS1A12 || 25   Extra comment
-       || None                None || 26   Extra comment
+       || Comment       UM BIS1A12 || 24 
        || Name: 4407, dtype: object|| 
        -------------------------------''' 
     fullrow = DB.iloc[tuberow_index]
@@ -218,7 +218,8 @@ def filter_columns(tuberow_index):
 
 
            "Final_flag"       :            fullrow.ok,
-           "IS_UM"            :  "UofM" if fullrow.Comment=="UM" else " MSU"}
+           "IS_UM"            :  "UofM" if "UM" in fullrow.Comment else " MSU",
+           "Comment"          :        fullrow.Comment}
     return row
 
 def format_tension(row):
@@ -370,7 +371,8 @@ def format_values(row:dict):
                   "Ship_Date": shipment_date_string, "Bend_Flag":Bend_flag,
                   "T1_Date": T1_date, "T1_Flag": T1_flag, "T1_Tension": T1_tension, "T1_Length": T1_length,
                   "T2_Date": T2_date, "T2_Flag": T2_flag, "T2_Tension": T2_tension, "T2_time_delta": T2_days_delta, 
-                  "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time_colored, "DC_Flag": DC_flag}
+                  "DC_Date": DC_date, "DC_DC": DC_DC, "DC_Time": DC_total_time_colored, "DC_Flag": DC_flag, 
+                  "Comment": row["Comment"]}
 
     return value_dict, good_tube_dict
 
@@ -421,6 +423,7 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
         Final_flag = red_text(row["Final_flag"])
 
     print_list.append(f"Final: {Final_flag: <12}")
+        
     
     # Why put this at the end? Because I like colors and think they should be fundamentally default
     # and I've already coded the padding in print_list and don't want to re-write the boolean checks to 
@@ -430,7 +433,7 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
     return print_list, good_tube_dict
 
 def id_to_values(input_tubeID:str):
-    '''Quick and easy use of functions to return the dictionaries of values. 
+    '''Quicker and easier use of functions to return the dictionaries of values. 
     This function does not handle errors from locate_tube_row
     returns: 
         value_dict = {"ID":             tubeID, 
@@ -448,7 +451,8 @@ def id_to_values(input_tubeID:str):
                       "DC_Date":        DC_date, 
                       "DC_DC":          DC_DC, 
                       "DC_Time":        DC_total_time_colored, 
-                      "DC_Flag":        DC_flag}
+                      "DC_Flag":        DC_flag,
+                      "Comment":        row["Comment"]}
         good_tube_dict = {"Bend":Bend_passed, "T1":T1_passed, "T2":T2_passed, "DC":DC_pass}
     
     '''

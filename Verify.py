@@ -311,7 +311,10 @@ if __name__ == "__main__":
 
     if not CheckFile:
         while True:
-            main(input("Tube ID: "))
+            try:
+                main(input("Tube ID: "))
+            except EOFError:
+                exit("\rDid you press ^D to exit the program? You can type stop, quit, or exit to quit the program next time, or not, I can't stop you.\n")
 
     if CheckFile:
         
