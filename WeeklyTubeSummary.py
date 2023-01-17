@@ -19,7 +19,7 @@ Date_series = pd.to_datetime(DB["Received"], format="%Y-%m-%d")
 # I do this so I can sum all of these values grouped by week later.
 Bend_series = DB["flagE"].map({"PASS":0, "Fail":1}, na_action=None).rename("Bent")
 MSU = DB["Comment"].map(lambda x: "UM" not in x, na_action=None).rename("MSU")
-UM = DB["Comment"].map(lambda x: "UM" in x, na_action=None).rename("UM")
+
 T1_series = DB["flag"].map({"pass":1, "fail":0}, na_action=None).rename("T1$_\text{ok}$")
 T2_series = DB["flag2"].map({"Pass2":1, "Pass2*":1, "Fail2":0, "Fail2*":0}, na_action=None).rename("T2$_\text{ok}$")
 DC_series = DB["DCflag"].map({"OK":1, "WARN":0, "BAD":0, "TRIP":0}, na_action=None).rename("DC$_\text{ok}$")
@@ -40,13 +40,6 @@ full_df.index = Date_series
 
 MSU_tubes = full_df[full_df["MSU"]==True]
 
-# Select the parts of full_df that are UM tubes, rename the relevant columns for presentation
-UM_tubes = full_df[full_df["MSU"]==False].rename(columns={"MSU":"UM", "Received":"Constructed"})
-
-# In full_df, UM is a column of False, if I want to do sums, I need to flip all values to True
-UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
-
-
 # Group by week starting on friday, sum them, and represent as integers. 163 looks better than 163.0
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
@@ -56,10 +49,10 @@ MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-8:]
 # all bent tubes are lost, but not all lost tubes are bent
 MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
 
-
-
 # This is used for naming the new "Total" column that I am about to make.  
 column_names = [item.name for item in items_in_summary]
+UM_column_names = ["Constructed on", "UM"] + [column for column in column_names[1:]]
+
 
 # Doing this any later made it difficult to lable the "Total". 
 MSU_summary = MSU_summary.reset_index(level="Received")
@@ -89,11 +82,45 @@ msu_string = msu_string.replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline
 with open(MSU_data_file, "w") as msufile:
 	msufile.write(msu_string)
 
-print(msu_string); exit()
-UM_data_file = "Weekly_Presentation/UM_Tube_Summary_Data.txt"
+#print(msu_string); exit()
+
+UM = DB["Comment"].map(lambda x: "UM" in x, na_action=None).rename("UM")
+
+# Select the parts of full_df that are UM tubes, rename the relevant columns for presentation
+UM_tubes = full_df[full_df["MSU"]==False].rename(columns={"MSU":"UM", "Received":"Constructed"})
+
+
+# In full_df, UM is a column of False, if I want to do sums, I need to flip all values to True
+UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
+
+UM_summary = UM_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
+
+UM_summary = UM_summary[(UM_summary != 0).any(1)][-7:] 
+
+UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
+
+
+
+UM_total = pd.DataFrame(UM_summary.sum(numeric_only=True).tolist(), index=UM_column_names[1:]).T
+
+UM_summary["Constructed on"] = UM_summary.index.astype(str)
+
+UM_summary = pd.concat([UM_summary, UM_total])
+
+UM_summary["Constructed on"][-1:] = "Total"
+
+# Re-ordering the columns 
+UM_summary = UM_summary[UM_column_names]
+
+
+# Get totals for just the subset I chose above (last 8 values)
+
+
+
+
+UM_data_file = "Weekly_Presentation/UM_Tube_Summary_Data.tex"
 um_string= UM_summary.to_latex(buf=None, escape=False, column_format = "|c|c|c|c|c|c|c|c|c|c|", index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
-UM_summary = UM_tubes.groupby("Constructed").agg("sum").astype("int")[-31:]
-UM_summary.loc["Total"] = UM_summary.sum(numeric_only=True, axis=0)
+
 UM_summary = UM_summary.reset_index(level=0)
 with open(UM_data_file, "w") as umfile:
 	umfile.write(um_string)

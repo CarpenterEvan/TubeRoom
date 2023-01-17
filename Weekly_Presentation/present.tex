@@ -1,105 +1,66 @@
 \documentclass{beamer}
 \usepackage{ulem}
 
-\usetheme{AnnArbor}
-\title{Tube Room Update}
+\usetheme{Dresden}
+\usecolortheme{wolverine}
+\title{Tube Room Update \\ \insertdate}
+\date{}
 \author{Evan Carpenter}
 
 \begin{document}
 \titlepage
 
+\section{Delivery Updates}
+	\begin{frame}
+		\begin{block}{Delivery:}
+			\begin{itemize}
+				\item \small MSU Delivered 200 tubes last Thursday. 5 Bent. 
+				\item Next delivery is this Friday Jan 20th.
+				\item I will not be here Friday.  
+			\end{itemize}
+		\end{block}	
+		\begin{block}{Tube Testing:}
+			\begin{itemize}
+				\item Mod 36 is in High Bay. Mod 37 is ready. %Enough tubes verified for Mod 38
+				\item Roughly $\sim$ 530 MSU tubes from different dates need leak test. $\sim$ 250 have been tested since end of break, but 200 more have been delivered since then.
+				\item 2nd Tension test and Leak testing tubes is highest priority. 
+			\end{itemize}
+		\end{block}
+	\end{frame}
 
-\begin{frame}
-	\begin{block}{Delivery:}
-		\begin{itemize}
-			\item \small MSU Delivered 200 tubes last Tdhursday. 0 Bent.
-			\item Next delivery is this Thursday Jan 12th.
-		\end{itemize}
-	\end{block}	
-	\begin{block}{Tube Testing:}
-		\begin{itemize}
-			\item Mod 36 is in High Bay. Mod 37 is 50\% ready. 
-			\item Roughly $\sim$ 530 MSU tubes from different dates need leak test. $\sim$ 250 have been tested since end of break, but 200 more have been delivered since then.
-			\item Bend test and Leak testing tubes from before break is highest priority. 
-		\end{itemize}
-	\end{block}
-\end{frame}
 
+\section{Tube Room Inventory}
+\subsection{MSU Tubes}
 
-\begin{frame}
-	\frametitle{Tube Room Inventory - MSU Tubes}
-	\begin{figure}
+	\begin{frame}{Tube Room Inventory - MSU Tubes}
+		\begin{figure}
+			\centering
+			\scalebox{0.5}{\input{MSU_Tube_Summary_Data.tex}}
+			\scalebox{0.5}{\input{UM_Tube_Summary_Data.txt}}
+		\end{figure}
 		\centering
-		\scalebox{0.6}{\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
-			\hline
-			WeekDate&MSU&BENT&$L_{ok}$&$T1_{ok}$&$T2_{ok}$&$DC_{ok}$ & DONE & ok & GONE & Used & Ready\\
-			\hline
-			10/28/22 & 503 & 0 & 503 & 488 & 393 & 472 & 420 & 390  & 11 & 354 & 36 \\
-			11/04/22 & 100 & 1 & 100 & 100 &  22 &  99 &  24 &  22  &  0 &  10 & 12 \\
-			11/18/22 & 200 & 0 & 200 & 199 &  72 & 199 &  78 &  71  &  1 &   9 & 62 \\
-			11/25/22 & 300 & 0 & 200 & 300 &   0 & 299 &   0 &   0  &  0 &   0 &  0 \\
-			12/02/22 & 195 & 0 & 0 & 195 &   2 & 195 &   2 &   2  &  0 &   0 &  2 \\
-			12/09/22 & 100 & 2 & 0 & 100 &   0 &  97 &   0 &   0  &  0 &   0 &  0 \\
-			01/06/23 & 199 & 0 & 0 & 199 &   0 & 116 &   0 &   0  &  0 &   0 &  0 \\
-			\hline
-			%WeekDate& MSU &BENT&  LT &  T1 &  T2 &  DC & DONE&  ok &GONE& Used& Ready
-			TOTAL    &1,597& \color{red}{3} &1,003&1,581& 489& 1,477& 524& 485&  \color{red}{12}& \color{red}{373}& 112\\\hline
-		\end{tabular}}
-	\end{figure}
-	\centering
-	Potential Good MSU Tubes: 1,597-\textcolor{red}{3}-\textcolor{red}{12}-\textcolor{red}{373}=1,209
-\end{frame}
+		%Potential Good MSU Tubes: \\
+		%Total Potential Good:
+	\end{frame}
 
-
-\begin{frame}
-	\frametitle{Tube Room Inventory - MSU Tubes}
-	\begin{figure}
+\subsection{UM Tubes}
+	\begin{frame}{Tube Room Inventory - UM Tubes}
+		\begin{figure}
+			\centering
+			\scalebox{0.5}{\input{UM_Tube_Summary_Data.txt}}
+		\end{figure}
 		\centering
-		\scalebox{0.6}{\input{MSU_Tube_Summary_Data.tex}}
-	\end{figure}
-	\centering
-	Potential Good MSU Tubes: 1,352-\textcolor{red}{6}-\textcolor{red}{11}-\textcolor{red}{561}=774\\
-	Total Potential Good: 1,983
-\end{frame}
-\begin{frame}
-	\frametitle{Tube Room Inventory - UM Tubes}
-		\scalebox{0.4}{\input{UM_Tube_Summary_Data_1.txt}}
-	\centering
-	Potential Good UM Tubes: 1,352-\textcolor{red}{6}-\textcolor{red}{11}-\textcolor{red}{561}=774\\
-	Total Potential Good: 1,983
-\end{frame}
+		Potential Good UM Tubes: \\
+		Total Potential Good:
+	\end{frame}
 
-\begin{frame}
-	\frametitle{Tube Room Inventory - UM Tubes}
-	\begin{figure}
-		\centering
-		\scalebox{0.6}{\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
-			\hline
-			WeekDate&UM&BENT&$L_{ok}$&$T1_{ok}$&$T2_{ok}$&$DC_{ok}$ & DONE & ok & GONE & Used & Ready\\
-			\hline
-			11/04/22 & 129 & 1 & 129 & 127 & 124 & 125 & 126 & 119 & 4 &  84 &  35 \\
-            11/11/22 & 233 & 1 & 232 & 232 & 172 & 230 & 172 & 170 & 2 & 142 &  28 \\
-            11/18/22 & 260 & 4 & 260 & 259 & 220 & 258 & 220 & 219 & 1 & 173 &  46 \\
-            11/25/22 & 101 & 0 & 100 & 101 &  97 & 100 &  97 &  97 & 0 &  61 &  36 \\
-            12/02/22 & 250 & 0 & 250 & 248 & 208 & 250 & 209 & 207 & 2 & 101 & 106 \\
-            12/09/22 & 191 & 0 & 191 & 187 &  95 & 188 &  97 &  95 & 2 &   0 &  95 \\
-            12/16/22 & 188 & 0 & 188 & 188 & 129 & 185 & 129 & 128 & 0 &   0 & 128 \\
-			\hline
-			%WeekDate& MSU &BENT&  LT &  T1 &  T2 &  DC & DONE&  ok &GONE& Used& Ready	
-			TOTAL &1352&\color{red}{6}& 1350 & 1342& 1045& 1336& 1050& 1035&  \color{red}{11}& \color{red}{561}& 474\\\hline
-		\end{tabular}}
-	\end{figure}
-	\centering
-	Potential Good UM Tubes: 1,352-\textcolor{red}{6}-\textcolor{red}{11}-\textcolor{red}{561}=774\\
-	Total Potential Good: 1,983
-\end{frame}
 
-\begin{frame}
-	\frametitle{Tube Room Inventory - UM Tubes}
-	\begin{figure}
-		\includegraphics[width=\linewidth]{UMdaily2022.png}
-	\end{figure}
-\end{frame}
+	\begin{frame}
+		%\frametitle{Tube Room Inventory - UM Tubes}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{UMdaily2022.png}
+		\end{figure}
+	\end{frame}
 \end{document}
 
 
