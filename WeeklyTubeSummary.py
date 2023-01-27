@@ -33,6 +33,10 @@ Used  = DB["ok"].map({"OK":1, "YES":0, "N/A":0, "NO":0}).rename("In Chamber")
 # this may not be neccessary, and only useful for the initial setup, so I may forget to remove it.
 items_in_summary = [MSU, Lost, Bend_series, T1_series, T2_series, DC_series, All_Ok, Used, Ready] 
 
+# This is used for naming the new "Total" column that I am about to make.  
+column_names = [item.name for item in items_in_summary]
+UM_column_names = ["Constructed", "UM"] + [column for column in column_names[1:]]
+
 # Male dataframe out of the series above, in the order presented in items_in_summary
 full_df = pd.concat(items_in_summary, axis=1)
 
@@ -44,14 +48,10 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-8:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-9:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
 MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
-
-# This is used for naming the new "Total" column that I am about to make.  
-column_names = [item.name for item in items_in_summary]
-UM_column_names = ["Constructed on", "UM"] + [column for column in column_names[1:]]
 
 
 # Doing this any later made it difficult to lable the "Total". 
@@ -63,9 +63,37 @@ MSU_total = pd.DataFrame(MSU_summary.sum(numeric_only=True).tolist(), index=colu
 # Removing this line saves the date as "2022-11-25 00:00:00" instead of "2022-11-25"
 MSU_summary["Received"] = MSU_summary["Received"].astype(str)
 
-MSU_summary = pd.concat([MSU_summary, MSU_total])
 
+MSU_need_leak_test = 0#int(input("How many MSU tubes need Leak test?: "))
+MSU_LT_row = pd.DataFrame(["-","-","-","-","-","-",f"-{MSU_need_leak_test}","-",f"-{MSU_need_leak_test}"], index=column_names).T
+
+#MSU_total[All_Ok.name] -= MSU_need_leak_test
+#MSU_total[Ready.name] -= MSU_need_leak_test
+
+
+
+UM = DB["Comment"].map(lambda x: "UM" in x, na_action=None).rename("UM")
+# Select the parts of full_df that are UM tubes, rename the relevant columns for presentation
+UM_tubes = full_df[full_df["MSU"]==False].rename(columns={"MSU":"UM"})
+# In full_df, UM is a column of False, if I want to do sums, I need to flip all values to True
+UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
+UM_summary = UM_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int")
+UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
+# setting the index as column_names re-labels what was "UM" as "MSU"
+UM_total = pd.DataFrame(UM_summary[-7:].sum(numeric_only=True).tolist(), index=column_names).T
+
+MSU_total = MSU_total + UM_total
+
+UM_total["Received"] = "(UM tubes this row)"
+print(UM_total)
+MSU_summary = pd.concat([UM_total, MSU_summary, MSU_total])
+
+#MSU_summary["Received"][-2:-1] = "Need Leak"
 MSU_summary["Received"][-1:] = "Total"
+
+MSU_summary["LT$_\text{ok}$"] = MSU_summary["MSU"]
+
+MSU_summary = MSU_summary[["Received"] + column_names[0:3] + ["LT$_\text{ok}$"] + column_names[3:]]
 
 MSU_data_file = "Weekly_Presentation/MSU_Tube_Summary_Data.tex"
 
@@ -74,7 +102,9 @@ MSU_data_file = "Weekly_Presentation/MSU_Tube_Summary_Data.tex"
 # Currently, it writes the MSU_summary to a LaTeX table, ignoring the index. 
 # I remove the date as the index earlier because when I include it, the index lable "Received" is offset from the rest of the headers. 
 # This was much easier to do for automatic table generation. 
-msu_string = MSU_summary.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*len(items_in_summary), index=False)
+
+
+msu_string = MSU_summary.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*len(list(MSU_summary.axes[1])), index=False)
 
 # Getting rid ot top/mid/bottom rule and adding in an \hline after every line break. This is stylistic. 
 msu_string = msu_string.replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
@@ -84,30 +114,20 @@ with open(MSU_data_file, "w") as msufile:
 
 #print(msu_string); exit()
 
-UM = DB["Comment"].map(lambda x: "UM" in x, na_action=None).rename("UM")
+exit()
+print(UM_total); exit()
 
-# Select the parts of full_df that are UM tubes, rename the relevant columns for presentation
-UM_tubes = full_df[full_df["MSU"]==False].rename(columns={"MSU":"UM", "Received":"Constructed"})
-
-
-# In full_df, UM is a column of False, if I want to do sums, I need to flip all values to True
-UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
-
-UM_summary = UM_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
-
-UM_summary = UM_summary[(UM_summary != 0).any(1)][-7:] 
-
-UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
+UM_summary = UM_summary[(UM_summary != 0).any(1)]
 
 
 
-UM_total = pd.DataFrame(UM_summary.sum(numeric_only=True).tolist(), index=UM_column_names[1:]).T
 
-UM_summary["Constructed on"] = UM_summary.index.astype(str)
+
+UM_summary["Constructed"] = UM_summary.index.astype(str)
 
 UM_summary = pd.concat([UM_summary, UM_total])
 
-UM_summary["Constructed on"][-1:] = "Total"
+UM_summary["Constructed"][-1:] = "Total"
 
 # Re-ordering the columns 
 UM_summary = UM_summary[UM_column_names]
@@ -117,10 +137,22 @@ UM_summary = UM_summary[UM_column_names]
 
 
 
-
 UM_data_file = "Weekly_Presentation/UM_Tube_Summary_Data.tex"
-um_string= UM_summary.to_latex(buf=None, escape=False, column_format = "|c|c|c|c|c|c|c|c|c|c|", index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
+
+um_string= UM_summary.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*len(items_in_summary), index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
 
 UM_summary = UM_summary.reset_index(level=0)
 with open(UM_data_file, "w") as umfile:
 	umfile.write(um_string)
+
+
+both_totals = UM_total.rename(columns={"UM":"MSU"}) + MSU_total
+both_totals = both_totals.rename(columns={"MSU":"Total \# of Tubes"})
+both_totals["Total Number in Tube Room"] = both_totals["Total \# of Tubes"] - both_totals["In Chamber"]# - both_totals["Bent"]- both_totals["Lost"]
+
+both_totals_string = both_totals.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*(len(items_in_summary)-1) + "p{2.5cm}|", index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
+
+totals_data_file = "Weekly_Presentation/Totals_Summary_Data.tex"
+
+with open(totals_data_file, "w") as totalsfile:
+	totalsfile.write(both_totals_string)

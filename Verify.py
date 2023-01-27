@@ -56,7 +56,7 @@ OrderedFile = (first_argument == "ordered") # This saves the tubes in reverse or
 # I call it ordered because the order is very important,  the last tube scanned will be the first tube glued in. 
 WriteFile   = (first_argument == "write") # This is just to record the tubes scanned to a file
 CheckFile   = (first_argument == "check") # going through a file of tubes and putting them through the main function
-SearchFor   = (first_argument == "search") # Still in progress.
+SearchFor   = (first_argument == "nosearch") # Still in progress.
 
 dont_use_seperator = "-smush" in sys.argv
 no_color_bool = "-bland" in sys.argv
@@ -96,12 +96,17 @@ elif OrderedFile:
 
     OrderedIDs = open(file_path, "w")
     print(f"\x1b[32;5mMaking Ordered File\x1b[0m at: {file_path}")
-elif SearchFor:
-    with open(input("Input file with IDs to search for: "), "r") as the_file:
-        target_list = re.findall("MSU[0-9]{5}", the_file.read())
 else: 
     file_path = os.path # empty path (?)
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
+
+try:
+    with open("Wanted.txt", "r") as the_file:
+        target_list = re.findall("MSU[0-9]{5}", the_file.read())
+        if len(target_list)!=0:
+            print("There are missing tubes of interest in the 'Wanted.txt' file, make sure your volume is up.\nIf the speakers do not work, the tube IDs will also flash.")
+except FileNotFoundError:
+    print("Lookout, there may be wanted tubes in 'Wanted.txt', make sure that file is in this directory")
 
 ###################################### Functions ######################################
 def write_tube_to_file_or_append_to_ordered_list(tubeid):
@@ -240,16 +245,21 @@ def main(inputs):
 
     if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]:
         print_summary_dictionary_and_exit()
-    elif SearchFor and tubeid in target_list: 
-        print("\a", end="\033[1A")
-    else: pass
+    elif tubeid in target_list: 
+        tube_caught = True 
+    else: 
+        tube_caught = False
 
     print_list, good_tube_dict = get_formatted_tuple(tubeid, suppress_colors=no_color_bool)
+
+    if tube_caught:
+        print_list[0] = f"\a\x1b[5m{print_list[0]}\x1b[0m"
+
     if "filler" not in good_tube_dict.keys() and "error" not in good_tube_dict.keys():
         verify_string = f" | ".join(print_list)
     else:
         verify_string = print_list
-
+    
     colored_counter = update_counter(tubeid, verify_string, good_tube_dict)
 
     date_string = print_list[2]
@@ -302,6 +312,12 @@ def test_case():
     main("stop")
     return 0
 
+def check_file_for_IDs_with_regex(filename):
+    newlist = []
+    with open(filename, "r") as the_file:
+        newlist += re.findall("MSU[0-9]{5}", the_file.read())#[id.strip() for id in tube_list]
+    return newlist
+
 ######################################## Main ########################################
 
 if __name__ == "__main__":
@@ -323,22 +339,28 @@ if __name__ == "__main__":
         print(" ")
         newlist = []
         if "Mod" in file_name:
+            ID_list = []
             mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[3:]}")
             try:
                 for file in os.scandir(mod_dir):
                     a_file = os.path.join(mod_dir, file.name)
-                    tube_list = open(a_file, "r").readlines()
-                    newlist += [id.strip() for id in tube_list]
+                    ID_list += check_file_for_IDs_with_regex(a_file)
+                    ID_list += [" ", " ", " ", " "]
             except FileNotFoundError:
                 exit("Sorry, but either that file doesn't exist, or I can't see it from here!")
+        elif "Wanted" in file_name:
+            try:
+                ID_list = check_file_for_IDs_with_regex("WANTED.txt")
+            except FileNotFoundError:
+                exit(f"The prompt 'Wanted' will display the tubes in the file of WANTED.txt.\nDoes that file exist in {__file__}?")
         else: 
             try:
                 with open(file_name, 'r') as the_file:
-                    newlist = re.findall("MSU[0-9]{5}", the_file.read())
+                    ID_list = re.findall("MSU[0-9]{5}", the_file.read())
             except FileNotFoundError:
                 exit("Sorry, but either that file doesn't exist, or I can't see it from here!")
 
-        newlist.append("stop")
-        for tube in newlist: 
+        ID_list.append("stop")
+        for tube in ID_list: 
             main(tube)
             print(" ")

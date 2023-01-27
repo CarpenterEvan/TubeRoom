@@ -1,65 +1,110 @@
 \documentclass{beamer}
 \usepackage{ulem}
-
 \usetheme{Dresden}
 \usecolortheme{wolverine}
-\title{Tube Room Update \\ \insertdate}
-\date{}
+
+\title{Tube Room Update}
 \author{Evan Carpenter}
+\setbeamertemplate{navigation symbols}{}
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/4
+}
 
 \begin{document}
 \titlepage
-
 \section{Delivery Updates}
 	\begin{frame}
 		\begin{block}{Delivery:}
 			\begin{itemize}
-				\item \small MSU Delivered 200 tubes last Thursday. 5 Bent. 
-				\item Next delivery is this Friday Jan 20th.
-				\item I will not be here Friday.  
+				\item \small MSU delivered 150 tubes last Friday. 0 Bent. 
+				\item Next delivery is this Thursday Jan 26th.
 			\end{itemize}
 		\end{block}	
 		\begin{block}{Tube Testing:}
 			\begin{itemize}
-				\item Mod 36 is in High Bay. Mod 37 is ready. %Enough tubes verified for Mod 38
-				\item Roughly $\sim$ 530 MSU tubes from different dates need leak test. $\sim$ 250 have been tested since end of break, but 200 more have been delivered since then.
-				\item 2nd Tension test and Leak testing tubes is highest priority. 
+				\item MSU's Leak detector is up and running! Reinhard says it has been working since December. 
+				\item Mod 37 and 38 are ready and covered in Tube Room. 
+				\item There are enough good tubes for Mod 39.
+				\item Only 155 MSU tubes from different dates still need leak test. 
+				\item Lots of tension and leak tests were done in the past week, many new tubes are now ready. 
 			\end{itemize}
 		\end{block}
 	\end{frame}
 
 
 \section{Tube Room Inventory}
-\subsection{MSU Tubes}
+	\subsection{MSU Tubes}
+		\begin{frame}{MSU Tubes}
+			\scalebox{0.6}{
+			\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+				\hline
+				WeekDate & MSU &BENT& Lok& Tok & T2ok& DCok& DONE&  OK  &GONE&USED &READY\\\hline
+				10/28/22 & 503 & 0 & 503 & 492 & 469 & 496 & 483 & 465 & 11 & 354 & 111\\
+                11/04/22 & 100 & 1 & 100 & 100 &  88 & 100 &  99 &  88 &  0 &  10 &  78\\
+                11/18/22 & 200 & 0 & 200 & 199 & 183 & 200 & 198 & 183 &  1 &   9 & 174\\
+                11/25/22 & 300 & 0 & 300 & 298 & 255 & 299 & 275 & 254 &  2 &   0 & 254\\
+                12/02/22 & 195 & 0 & 195 & 194 & 163 & 195 & 177 & 163 &  1 &   0 & 163\\
+                12/09/22 & 100 & 2 & 100 & 100 &  90 &  99 &  97 &  90 &  0 &   0 &  90\\
+                01/06/23 & 200 & 0 & 200 & 198 & 188 & 197 & 199 & 185 &  2 &   0 & 185\\
+                01/13/23 & 200 & 5 & 195 & 199 & 181 & 198 & 193 & 181 &  1 &   0 & 181\\
+                01/20/23 & 150 & 0 & 0 & 150 &   0 &   0 &   0 &   0 &  0 &   0 &   0\\\hline
+														
+				TOTAL &    1948& 8 &1948 &1930&1617&1784	&1721	&1609	&18	&373	&1236\\\hline
+			\end{tabular}}
+			\vspace{0.5cm}
+			\begin{itemize}
+				\item 150 tubes from new shipment have not been leak tested yet. 
+				\item This total is including Mod 37, 38. 
+			\end{itemize}
+		\end{frame}
+	\subsection{UM Tubes}
+		\begin{frame}{UM Tubes}
+			\scalebox{0.6}{
+			\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+				\hline
+				WeekDate & UM &BENT& Lok& Tok & T2ok& DCok& DONE&  OK  &GONE&USED &READY\\\hline
+				11/04/22 & 129 & 1 & 129 & 127 & 126 & 128 & 127 & 124 & 4 &  84 &  40\\
+				11/11/22 & 233 & 1 & 232 & 231 & 227 & 230 & 226 & 223 & 3 & 142 &  81\\
+				11/18/22 & 260 & 4 & 260 & 259 & 255 & 258 & 256 & 253 & 1 & 173 &  80\\
+				11/25/22 & 101 & 0 & 100 & 101 & 100 & 100 & 100 & 100 & 0 &  61 &  39\\
+				12/02/22 & 250 & 0 & 250 & 249 & 249 & 250 & 249 & 248 & 1 & 101 & 147\\
+				12/09/22 & 191 & 2 & 191 & 188 & 184 & 188 & 186 & 183 & 2 &   0 & 183\\
+				12/16/22 & 188 & 1 & 188 & 188 & 185 & 186 & 185 & 185 & 0 &   0 & 185\\\hline
+				TOTAL &1352&	9&	1350&	1343&	1326&	1340&	1329&	1316&	11&	561&	755\\\hline
+			\end{tabular}}
+			\begin{itemize}
+				\item 1,236 MSU Tubes + 755 UM Tubes = \textbf{1,991 Total Ready}
+				\item Accounting for Mod 37 and 38: $$1,991-464-464={\bf 1,063\ Ready\ \text{After 37, 38}}$$
+				\item Rough manual count showed $\sim1,050$ good, so this number should be accurate.
+				\item More sorting needs to be done to check T2 status.
+			\end{itemize}
+			
+		\end{frame}
+	
 
+		\begin{frame}
+			%\frametitle{Tube Room Inventory - UM Tubes}
+			\begin{figure}
+				\includegraphics[width=\linewidth]{UMdaily2022.png}
+			\end{figure}
+		\end{frame}
+\section*{Backup Slides}
+	\appendix
+	\begin{frame}
+		Tests of automating summary-making process.
+	\end{frame}
 	\begin{frame}{Tube Room Inventory - MSU Tubes}
 		\begin{figure}
 			\centering
-			\scalebox{0.5}{\input{MSU_Tube_Summary_Data.tex}}
-			\scalebox{0.5}{\input{UM_Tube_Summary_Data.txt}}
+			\scalebox{0.6}{\input{MSU_Tube_Summary_Data.tex}}
+			\caption{Currently there is no way to keep track of individual dates' leak tests. I subtract it at the end so the total number of ``Ready'' tubes is accurate.}
 		\end{figure}
 		\centering
 		%Potential Good MSU Tubes: \\
 		%Total Potential Good:
-	\end{frame}
-
-\subsection{UM Tubes}
-	\begin{frame}{Tube Room Inventory - UM Tubes}
-		\begin{figure}
-			\centering
-			\scalebox{0.5}{\input{UM_Tube_Summary_Data.txt}}
-		\end{figure}
-		\centering
-		Potential Good UM Tubes: \\
-		Total Potential Good:
-	\end{frame}
-
-
-	\begin{frame}
-		%\frametitle{Tube Room Inventory - UM Tubes}
-		\begin{figure}
-			\includegraphics[width=\linewidth]{UMdaily2022.png}
-		\end{figure}
 	\end{frame}
 \end{document}
 
