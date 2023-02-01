@@ -143,12 +143,16 @@ def locate_tube_row(input_tubeID:str):
                 "t5": "MSU03909"} 
 
     tubeID = input_tubeID
+    if tubeID.isnumeric():
+            tubeID = "MSU" + tubeID
+    else:
+        pass
     try:
         looks_like_tube_ID = match("MSU[0-9]{5}", tubeID) != None
 
         if looks_like_tube_ID:
             pass 
-
+        
         elif tubeID in defaults.keys():
                 tubeID = defaults[tubeID] # Default
         else: 
@@ -159,7 +163,7 @@ def locate_tube_row(input_tubeID:str):
         # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow
         return tuberow_index     
 
-    except ValueError: # This means the ID is valid but not in the DB
+    except ValueError: # This means the ID is not valid
         return -1
         
 def filter_columns(tuberow_index):
