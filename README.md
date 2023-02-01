@@ -27,9 +27,15 @@
 ## <a name="testing"> Testing Tubes </a>
 Currently there are 4 quality assurance tests we perform on tubes recieved from MSU:
 ###    Bend Tested (BT)
+1.    First you turn on the electronic microscope that is clamped to the L-beam. 
+1.    Zoom in all the way (x4.0 zoom).
+1.    The test is performed by placing a tube on the L-beam such that the center of the tube is in view of the microscope. 
+1.    Gently rotate the tube (careful that it rotates with 100% slipping, the tube should not be rolling!)
 ###    Tube is Leak Tested (LT)
 ###    Tube's Tark Turrent is tested (DC)
 ###    The wire of the tube is Tension Tested (TT)
+
+
 
 
 ## Running Python Files  <a name="code"></a>
