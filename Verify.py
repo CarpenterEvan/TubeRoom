@@ -20,9 +20,12 @@ if Google Drive desktop cannot be found, the code will look for TUBEDB.txt in th
 '''
 
 ### Potential Updates: 
+#
+#
+#
 #    Warning: Currently, allowing for updating the DB live, during a run of this code
-#             is something I have considered, but it could also break the current method 
-#             of making the summary of the tubes. 
+#             is something I have considered, but it would break the current method 
+#             of making the summary of the tubes. So I would advise staying away from it. 
 #
 #
 #
@@ -54,9 +57,8 @@ first_argument = sys.argv[-Nexargs]
 
 OrderedFile = (first_argument == "ordered") # This saves the tubes in reverse order to a file, 
 # I call it ordered because the order is very important,  the last tube scanned will be the first tube glued in. 
-WriteFile   = (first_argument == "write") # This is just to record the tubes scanned to a file
-CheckFile   = (first_argument == "check") # going through a file of tubes and putting them through the main function
-SearchFor   = (first_argument == "nosearch") # Still in progress.
+WriteFile   = (first_argument == "write") # This is just to record the tubes scanned to a file named with a timestamp.
+CheckFile   = (first_argument == "check") # going through a file of tubes and putting them through the main function.
 
 dont_use_seperator = "-smush" in sys.argv
 no_color_bool = "-bland" in sys.argv
@@ -93,9 +95,9 @@ elif OrderedFile:
 
     if os.path.exists(file_path):
         exit(f"That file already exists at {file_path}!\nDo not overwrite!")
-
-    OrderedIDs = open(file_path, "w")
-    print(f"\x1b[32;5mMaking Ordered File\x1b[0m at: {file_path}")
+    else: 
+        OpenOrderedFile = True
+        print(f"Will be making an Ordered File \x1b[32;5mUpon Completion\x1b[0m at: {file_path}")
 else: 
     file_path = os.path # empty path (?)
     print("\x1b[31;5mNOT RECORDING\x1b[0m") # Blinking red text "NOT RECORDING"
@@ -104,7 +106,7 @@ try:
     with open("Wanted.txt", "r") as the_file:
         target_list = re.findall("MSU[0-9]{5}", the_file.read())
         if len(target_list)!=0:
-            print("There are missing tubes of interest in the 'Wanted.txt' file, make sure your volume is up.\nIf the speakers do not work, the tube IDs will also flash.")
+            print("There are missing tubes of interest in the 'Wanted.txt' file, make sure your volume is up. The wanted tube IDs will also flash.")
 except FileNotFoundError:
     print("Lookout, there may be wanted tubes in 'Wanted.txt', make sure that file is in this directory")
 
@@ -161,7 +163,10 @@ def finish_writing_files():
     '''closes the files if WriteFile, or reverses the order of the Ordered list and saves it all to a file. '''
     if WriteFile:
         VerifiedIDs.close()
-    elif OrderedFile:
+    elif OrderedFile and OpenOrderedFile:
+        if len(ordered_list) != 58:
+            exit("\n\x1b[31;5mERROR\x1b[0m: Number of tubes scanned is not 58.\nThe ordered file will NOT be written!\n")
+        OrderedIDs = open(file_path, "w")
         ordered_list.reverse()
         OrderedIDs.writelines(ordered_list)
         OrderedIDs.close()

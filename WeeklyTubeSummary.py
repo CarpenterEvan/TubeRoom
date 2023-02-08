@@ -48,10 +48,10 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-9:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-10:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
-MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
+#MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
 
 
 # Doing this any later made it difficult to lable the "Total". 
@@ -80,7 +80,7 @@ UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
 UM_summary = UM_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int")
 UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
 # setting the index as column_names re-labels what was "UM" as "MSU"
-UM_total = pd.DataFrame(UM_summary[-7:].sum(numeric_only=True).tolist(), index=column_names).T
+UM_total = pd.DataFrame(UM_summary[-8:].sum(numeric_only=True).tolist(), index=column_names).T
 
 MSU_total = MSU_total + UM_total
 
@@ -104,10 +104,10 @@ MSU_data_file = "Weekly_Presentation/MSU_Tube_Summary_Data.tex"
 # This was much easier to do for automatic table generation. 
 
 
-msu_string = MSU_summary.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*len(list(MSU_summary.axes[1])), index=False)
+msu_string = MSU_summary.to_latex(buf=None, escape=False, column_format = "r|" + "r|"*(len(list(MSU_summary.axes[1]))-2) + "r", index=False)
 
 # Getting rid ot top/mid/bottom rule and adding in an \hline after every line break. This is stylistic. 
-msu_string = msu_string.replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
+#msu_string = msu_string.replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
  
 with open(MSU_data_file, "w") as msufile:
 	msufile.write(msu_string)

@@ -23,5 +23,9 @@ MSU07245, Crushed Crimp Pin
 MSU22929, Bad Swage
 MSU07411, DC Short
 MSU23033, Leak
+MSU21645, Bad Swage
+MSU21673, Bad Swage
+MSU22933, Bad Swage
+
 
 
