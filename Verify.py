@@ -70,7 +70,7 @@ if WriteFile:
     CheckFile = False
 
     file_name = f"Verified_{datetime.now().strftime('%Y%m%d%H')}.txt"
-    file_path = os.path.join(os.path.abspath(""), "Verifying", file_name)
+    file_path = os.path.join(os.path.abspath(""), file_name)
     VerifiedIDs = open(file_path, "a+") # Writes to a file with yyyymmdd format in name
     print(f"\x1b[32;5mRecording\x1b[0m: {file_path}") # Blinking green text "Recording"
 elif OrderedFile:
@@ -106,9 +106,9 @@ try:
     with open("Wanted.txt", "r") as the_file:
         target_list = re.findall("MSU[0-9]{5}", the_file.read())
         if len(target_list)!=0:
-            print("There are missing tubes of interest in the 'Wanted.txt' file, make sure your volume is up. The wanted tube IDs will also flash.")
+            print("There are missing tubes of interest in the 'WANTED.txt' file, make sure your volume is up. The wanted tube IDs will also flash.")
 except FileNotFoundError:
-    print("Lookout, there may be wanted tubes in 'Wanted.txt', make sure that file is in this directory")
+    print("Lookout, there may be wanted tubes in 'WANTED.txt', make sure that file is in this directory")
 
 ###################################### Functions ######################################
 def write_tube_to_file_or_append_to_ordered_list(tubeid):
@@ -338,7 +338,7 @@ if __name__ == "__main__":
                 exit("\rDid you press ^D to exit the program? You can type stop, quit, or exit to quit the program next time, or not, I can't stop you.\n")
 
     if CheckFile:
-        
+        os.system("ls")
         file_name = input("File Name [ModXX]: ")
         
         print(" ")

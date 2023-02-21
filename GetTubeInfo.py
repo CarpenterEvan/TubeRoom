@@ -47,8 +47,8 @@ def color_string(string, goal):
         
 def copy_DB_file_if_available():
     '''
-    You never know when you'll be offline (or at least, I dont know when I'LL be offline...), if you have access to the GDrive, 
-    this function will copy a version into the cwd to have an updated version ready. 
+    If you have access to the GDrive, this function will copy a version into,
+    the cwd to have an updated version ready. 
     '''
     if os.path.exists(home_to_google_drive_database) !=True:
         return 0
@@ -110,13 +110,16 @@ def format_database():
         print(f"and was Last Updated: ", datetime.fromtimestamp(os.path.getmtime(path_used)))
         copy_DB_file_if_available()
 
-    df = df.applymap(lambda string: " ".join(string.split())) # "1   2 3     4  5"  -->  "1 2 3 4 5"
-    df = df.applymap(lambda string: string.split(" "))        # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
-    ID = pd.DataFrame(df["ID"].tolist()[2:], columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
-    T1 = pd.DataFrame(df["T1"].tolist()[2:], columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
-    T2 = pd.DataFrame(df["T2"].tolist()[2:], columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
-    DC = pd.DataFrame(df["DC"].tolist()[2:], columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
-    FV = pd.DataFrame(df["FV"].tolist()[2:], columns=["ENDday",  "done?",   "ok",       "Comment1", "Comment2", "Comment3"], dtype=str).fillna("")
+    # "1   2 3     4  5"  -->  "1 2 3 4 5"
+    df = df.applymap(lambda string: " ".join(string.split())) 
+    # "1 2 3 4 5"  -->  ["1", "2", "3", "4", "5"]
+    df = df.applymap(lambda string: string.split(" ")) 
+    df.drop(index=[0,1], inplace=True)
+    ID = pd.DataFrame(df["ID"].tolist(), columns=["tubeID",  "End",     "Received", "leakrate", "bend", "flagE"])
+    T1 = pd.DataFrame(df["T1"].tolist(), columns=["T1Date", "Length", "Frequency",  "Tension",  "flag", "L"])
+    T2 = pd.DataFrame(df["T2"].tolist(), columns=["dFrequency",  "dTension",   "dDays",    "flag2"])
+    DC = pd.DataFrame(df["DC"].tolist(), columns=["DCday",   "sys",     "DC",   "HVseconds",     "DCflag"])
+    FV = pd.DataFrame(df["FV"].tolist(), columns=["ENDday",  "done?",   "ok",       "Comment1", "Comment2", "Comment3"], dtype=str).fillna("")
     FV["Comment"] = FV["Comment1"] + " " + FV["Comment2"] + " " + FV["Comment3"]
     FV.drop(["Comment1","Comment2","Comment3"], axis=1, inplace=True)
     newdf = pd.concat((ID, T1, T2, DC, FV), axis=1)
@@ -152,18 +155,21 @@ def locate_tube_row(input_tubeID:str):
 
         if looks_like_tube_ID:
             pass 
-        
+
+        # if the input doesn't look like an ID, maybe it's a default value.
         elif tubeID in defaults.keys():
-                tubeID = defaults[tubeID] # Default
+            tubeID = defaults[tubeID]
+        # if input doesn't look like a tube ID, and isn't a default value, it's nonsense.
         else: 
             return -1
-
-
-        tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] # index of the row with True, which is the only row with the ID
-        # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow
+        # index of the row with True, which is the only row with the ID
+        # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow 
+        # Throws ValueError if ID not found
+        tuberow_index, = DB["tubeID"].index[ DB["tubeID"].str.contains(tubeID) ] 
+        
         return tuberow_index     
 
-    except ValueError: # This means the ID is not valid
+    except ValueError: # This means the ID is valid, but not in DB
         return -1
         
 def filter_columns(tuberow_index):
@@ -181,7 +187,7 @@ def filter_columns(tuberow_index):
        || Frequency           95.0 ||  8 
        || Tension          362.971 ||  9 * Date of 1st UM Tension
        || flag                pass || 10 * 1st Tension flag
-       || L                      B || 11   Length Category
+       || L                      B || 11 * Length Category
        || dFrequency          0.50 || 12 
        || dTension          -3.831 || 13 *
        || dDays                13D || 14 *
@@ -205,7 +211,7 @@ def filter_columns(tuberow_index):
            "Bend_flag"        :         fullrow.flagE,
            "T1_date"          :        fullrow.T1Date,
            "T1_length"        :        fullrow.Length,
-
+           "Length_flag"      :             fullrow.L,
            "T1_tension"       :       fullrow.Tension,
            "T1_flag"          :          fullrow.flag,
 
@@ -226,6 +232,122 @@ def filter_columns(tuberow_index):
            "Comment"          :        fullrow.Comment}
     return row
 
+def new_format_tension(row):
+    '''
+    Given a certain row, extract the values related to tension. 
+    Check if both tension tests have been done. 
+    
+    If both have been done, figure out what the previous tension was, 
+        assign it to T1, assign the current tension to T2
+
+    If only the first test has been done, 
+        see how many days until the second test can be done. 
+        return dashes for T2.
+    
+    If neither test has been done, return dashes ("---") 
+    '''
+    try:
+        T1_date = row["T1_date"] 
+        T1_tension  = float(row["T1_tension"])
+        T1_length   = float(row["T1_length"])
+        valid_T1_entry = True
+    except ValueError:
+        T1_date = "01-01-01"
+        T1_tension  = 0.
+        T1_length   = 0.
+        valid_T1_entry = False
+    try:
+        T2_tension_delta = float(row["T2_tension_delta"])
+        T2_time_delta = int(row["T2_time_delta"][:-1]) # 13D --> 13
+        valid_T2_entry = True
+    except ValueError: 
+        T2_tension_delta =  0.
+        T2_time_delta = 0
+        valid_T2_entry = False
+
+    T1_date = datetime.strptime(T1_date, "%y-%m-%d")
+    T2_time_delta = timedelta(days = T2_time_delta)
+
+    # In the Database, the tension data stored is of the most recent test. 
+    # One tube might go through two tension tests that look like:
+    # 
+    #   T   dT   date[dd/mm/yy]        dt 
+    # 350   0g         01/01/22        0D
+    # 325 -25g         15/01/22       14D
+    # 
+    # The Database would only take the last measurement, which is what my code reads.
+    # Currently the code says:
+    # T1_tension = 325.0
+    # T2_tension_delta = -25.0 
+    # T2_dt = 14 and so on.
+    # However, I want to present the T1 = 350, and T2 = 325, with the rest staying the same.
+
+    if valid_T1_entry and valid_T2_entry:
+        # Both measurements are done, 
+        # this means the most recent tension test is in the T1 spot, 
+        # and it's difference in time and tension are in the T2 spot. 
+        # We need to subtract this difference to see the "true" T1, the test before the most recent one. 
+        
+
+        T2_date = datetime.strftime(T1_date, "%y-%m-%d")
+        T2_tension = str(round(T1_tension,3))
+
+        T1_date = datetime.strftime(T1_date - T2_time_delta, "%y-%m-%d")
+        T1_tension = round(T1_tension - T2_tension_delta, 3)
+
+    elif valid_T1_entry and not valid_T2_entry:
+        # Only first measurement is taken, 
+        # we don't have any deltas, so no subtraction for T1, and T2 is null
+
+        T1_date = datetime.strftime(T1_date, "%y-%m-%d")
+        T1_tension = T1_tension
+
+        T2_date = "--------"
+        T2_tension = "-------"
+
+        # If no T2 delta, then see how long it has been waiting!
+        T2_days_delta = (datetime.today()-T1_date).days 
+
+        if (T2_days_delta < 14):
+            T2_days_delta_flag = True
+
+        elif (T2_days_delta >= 14):
+
+            if ("-" in T2_tension):
+                T2_days_delta_flag = False
+
+            else: 
+                T2_days_delta_flag = None
+
+    else: 
+        T1_date = "--------"
+        T1_tension = "-------"
+        T2_date = "--------"
+        T2_tension = "-------"
+    T2_days_flagged = (T2_days_delta, T2_days_delta_flag)
+    return T1_date, T1_length, T1_tension, T2_date, T2_tension, T2_days_flagged
+
+
+def new_format_DC(row):
+    DC_DC = row["DC_DC"]
+    DC_date = row["DC_date"]
+
+    try: 
+
+        DC_total_time_in_seconds = int(row["DC_seconds"])
+        DC_hours = DC_total_time_in_seconds // 3600
+        DC_minutes = (DC_total_time_in_seconds - DC_hours * 3600) // 60
+        DC_seconds = DC_total_time_in_seconds - DC_minutes * 60 - DC_hours * 3600
+        DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}"
+        DC_total_time_flag = None if (DC_hours>=4) else True
+    except ValueError:
+        DC_total_time = "00:00:00"
+        DC_total_time_flag = False
+
+    DC_time_flagged = (DC_total_time, DC_total_time_flag)
+
+    return DC_DC, DC_date, DC_time_flagged
+    
 def format_tension(row):
     '''
     Given a certain row, extract the values related to tension. 
@@ -248,6 +370,7 @@ def format_tension(row):
         valid_T1_string = True
         T1_length_pad = f"{T1_length:0<7}"
         T1_length_colored = white_text(T1_length_pad) if T1_length>=1623.75 and T1_length<=1625.25 else red_text(T1_length_pad)
+
     except ValueError:
         
         T1_date = "01-01-01"
@@ -380,6 +503,28 @@ def format_values(row:dict):
 
     return value_dict, good_tube_dict
 
+def new_raise_flags(row):
+    Length_flag = True if (row["Length_flag"]=="E") else False
+    Bend_flag =  False if ("Pass" in row["Bend_flag"].capitalize()) else True
+    T1_flag =    False if ("Pass" in row["T1_flag"].capitalize()) else True
+    T2_flag =    False if ("Pass" in row["T2_flag"].capitalize()) else True 
+    DC_flag =    False if ("Ok" in row["DC_flag"]) else True
+    Final_Flag = False if ("Ok" in row["Final_flag"]) or ("Yes" in row["Final_flag"]) else True
+    return Bend_flag, Length_flag, T1_flag, T2_flag, DC_flag, Final_Flag
+
+def new_pair_value_with_flag(row):
+    T1_date, T1_length, T1_tension, T2_date, T2_tension, T2_days_Flagged = new_format_tension(row)
+    Bend_flag, Length_flag, T1_flag, T2_flag, DC_flag, Final_flag = new_raise_flags(row)
+    DC_DC, DC_date, DC_time_flagged = new_format_DC(row)
+
+    #Bend_Flagged = row[""]
+    T1_length_Flagged = (T1_length, Length_flag)
+    T1_tension_Flagged = (T1_tension, T1_flag)
+    T2_tension_Flagged = (T2_tension,T2_flag)
+    # T2_days_flagged already made
+    DC_DC_Flagged = (DC_DC, DC_flag)
+    Final_Flagged = (row["Final_flag"], Final_flag)
+     
 def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
     __doc__ ='''
     Using the prompted input tube ID, attempt to use locate_tube_row to find the row. 

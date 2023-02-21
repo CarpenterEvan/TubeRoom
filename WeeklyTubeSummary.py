@@ -48,7 +48,7 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-10:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-12:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
 #MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
@@ -78,7 +78,7 @@ UM_tubes = full_df[full_df["MSU"]==False].rename(columns={"MSU":"UM"})
 # In full_df, UM is a column of False, if I want to do sums, I need to flip all values to True
 UM_tubes["UM"] = UM_tubes["UM"].map(lambda x: not x)
 UM_summary = UM_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int")
-UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
+#UM_summary["Lost"] = UM_summary["Lost"] - UM_summary["Bent"] 
 # setting the index as column_names re-labels what was "UM" as "MSU"
 UM_total = pd.DataFrame(UM_summary[-8:].sum(numeric_only=True).tolist(), index=column_names).T
 

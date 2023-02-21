@@ -1,2 +1,3 @@
 MSU22179, No Bend Test
-
+MSU12970, bad DC and missing since last year
+MSU24861, No Bend Test
