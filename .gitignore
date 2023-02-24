@@ -2,3 +2,7 @@
 .vscode
 __pycache__
 .DS_Store
+*.txt
+*.csv
+*.log
+!WANTED.txt
