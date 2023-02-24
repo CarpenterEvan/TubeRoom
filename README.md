@@ -43,13 +43,16 @@ Currently there are 4 quality assurance tests we perform on tubes recieved from 
 1.    Anything not in the Work-In-Progress (WIP) folder should work just fine. Anything in the WIP folder... might not. 
 1.    This code is still for lab use, meaning you'll need access to the lab's Google Drive. Get someone to add you to the google drive, if you can't find anyone else to add you (impossible) email me `ecarp@umich.edu`.
 1.    I run these files from the command-line.
-1.    I use [Anaconda](https://www.anaconda.com/) because it has almost every python package I would need and feels self contained.
-1. I personally reccomend, downloading the python package manager (so you don't have to individually install numpy, matplotlib.pyplot, scipy, pandas, ...) that is optimized for data science: [Anaconda](https://www.anaconda.com/). If you have your own installation of python that you like better, then use that!
+2.    Download this TubeRoom Folder. 
+3.    Run 
+###    conda env create -n ENVNAME --file ENV.yml
+4.    I use [Anaconda](https://www.anaconda.com/) because it has almost every python package I would need and feels self contained.
+5. I personally reccomend, downloading the python package manager (so you don't have to individually install numpy, matplotlib.pyplot, scipy, pandas, ...) that is optimized for data science: [Anaconda](https://www.anaconda.com/). If you have your own installation of python that you like better, then use that!
 I also reccomend downloading [Google Drive Desktop](https://www.google.com/drive/download/) for accessing the database files easier, and [Visual Studio Code](https://code.visualstudio.com/) for reading/changing the code however you want. They should be straightforward downloads. 
 1. Download this repository (green "Code" button)
-1. Open Terminal (Mac) or Command Prompt (Windows)
-1. Navigate to the downloaded folder (use cd to change directory, figuring out how to use that and other commands on your own is a good idea. Things like cd, ls, pwd, etc.)
-1. Run a file like Verify.py file with `python Verify.py`
+2. Open Terminal (Mac) or Command Prompt (Windows)
+3. Navigate to the downloaded folder (use cd to change directory, figuring out how to use that and other commands on your own is a good idea. Things like cd, ls, pwd, etc.)
+4. Run a file like Verify.py file with `python Verify.py`
 
 ###    `Verify.py`
 I want to scan the barcode ID on a tube and check from the Database file what tests it has passed. 

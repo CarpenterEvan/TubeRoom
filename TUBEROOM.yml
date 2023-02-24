@@ -1,0 +1,8 @@
+name: TUBEROOM
+channels:
+  - defaults
+dependencies:
+  - python
+  - matplotlib-base
+  - jinja2
+prefix: /opt/anaconda3/envs/TUBEROOM
