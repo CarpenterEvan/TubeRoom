@@ -5,4 +5,7 @@ dependencies:
   - python
   - matplotlib-base
   - jinja2
+  - pip
+  - pip: 
+    - pandas==1.5.0
 prefix: /opt/anaconda3/envs/TUBEROOM
