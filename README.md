@@ -5,9 +5,7 @@
 `conda env create -n TUBEROOM --file TUBEROOM.yml`
 
 # Welcome to the UofM ATLAS Tube Room!!
-## If you're reading this line, then everthing here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all done when I have free time, so don't judge! (too much). Ok here is the rest of the file:
-
-#### If you're reading this, then I'm probably not in lab anymore, hello from ~beyond the grave~ wherever I am that's not here. 
+## If you're reading this line, then everything here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all done when I have free time, so don't judge! (too much). Ok here is the rest of the file:
 
 #### Welcome to my documentation of what I have found in my time in the Tube Room. 
 
