@@ -1,2 +1,19 @@
-MSU22179, No Bend Test
+╔════════════════════════════════════════════════════════════════════╗
+║ If there's a tube that somehow missed a test,                      ║
+║ or that you just need to be on the lookout for,                    ║
+║ put it in this file.                                               ║
+║                                                                    ║
+║ If any ID in this file is input through:                           ║
+║                                                                    ║
+║ verify.py                                                          ║
+║                                                                    ║
+║ or                                                                 ║
+║                                                                    ║
+║ verify.py check                                                    ║
+║                                                                    ║
+║ The ID will flash on and off and make a noise.                     ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+
 MSU12970, bad DC and missing since last year

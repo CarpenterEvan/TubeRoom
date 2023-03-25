@@ -5,7 +5,7 @@ import datetime
 pdf_date = datetime.datetime.strftime(datetime.datetime.today(), "%Y%m%d")
 
 
-#`os.system("python WeeklyTubeSummary.py")
+# os.system("python WeeklyTubeSummary.py")
 os.system("pdflatex present.tex")
 os.rename("present.pdf", f"{pdf_date}_TubeRoomUpdate.pdf")
 

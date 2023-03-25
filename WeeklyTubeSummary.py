@@ -48,7 +48,7 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-12:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-13:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
 #MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 

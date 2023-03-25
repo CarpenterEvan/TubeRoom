@@ -106,7 +106,7 @@ try:
     with open("Wanted.txt", "r") as the_file:
         target_list = re.findall("MSU[0-9]{5}", the_file.read())
         if len(target_list)!=0:
-            print("There are missing tubes of interest in the 'WANTED.txt' file, make sure your volume is up. The wanted tube IDs will also flash.")
+            print("There are missing tubes of interest in the 'WANTED.txt' file, make sure your volume is up. The wanted tube IDs will make a noise and flash if you scan them.")
 except FileNotFoundError:
     print("Lookout, there may be wanted tubes in 'WANTED.txt', make sure that file is in this directory")
 
@@ -338,9 +338,16 @@ if __name__ == "__main__":
                 exit("\rDid you press ^D to exit the program? You can type stop, quit, or exit to quit the program next time, or not, I can't stop you.\n")
 
     if CheckFile:
-        os.system("ls")
-        file_name = input("File Name [ModXX]: ")
-        
+        # ls lists out files
+        # -1 (not -l) lists them as a column of names
+        # *.txt *.csv *.tsv says only list files that end in .txt, .csv, or .tsv
+        # | is a pipe, it takes the output from the first function (column of names) 
+        #               and puts it into the next function.
+        # awk formats the 1st column ($1), adding a \t in front of it
+        os.system(''' ls -1 *.txt *.csv *.tsv| awk '$1="\t"$1' ''')
+
+        print("\tor ModXX for Modules")
+        file_name = input("File Name: ")
         print(" ")
         newlist = []
         if "Mod" in file_name:
@@ -348,6 +355,7 @@ if __name__ == "__main__":
             mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[3:]}")
             try:
                 for file in os.scandir(mod_dir):
+                    print(file)
                     a_file = os.path.join(mod_dir, file.name)
                     ID_list += check_file_for_IDs_with_regex(a_file)
                     ID_list += [" ", " ", " ", " "]
