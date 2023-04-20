@@ -20,9 +20,9 @@ Date_series = pd.to_datetime(DB["Received"], format="%Y-%m-%d")
 Bend_series = DB["flagE"].map({"PASS":0, "Fail":1}, na_action=None).rename("Bent")
 MSU = DB["Comment"].map(lambda x: "UM" not in x, na_action=None).rename("MSU")
 
-T1_series = DB["flag"].map({"pass":1, "fail":0}, na_action=None).rename("T1$_\text{ok}$")
-T2_series = DB["flag2"].map({"Pass2":1, "Pass2*":1, "Fail2":0, "Fail2*":0}, na_action=None).rename("T2$_\text{ok}$")
-DC_series = DB["DCflag"].map({"OK":1, "WARN":0, "BAD":0, "TRIP":0}, na_action=None).rename("DC$_\text{ok}$")
+T1_series = DB["flag"].map({"pass":1, "fail":0}, na_action=None).rename("T1\ok")
+T2_series = DB["flag2"].map({"Pass2":1, "Pass2*":1, "Fail2":0, "Fail2*":0}, na_action=None).rename("T2\ok")
+DC_series = DB["DCflag"].map({"OK":1, "WARN":0, "BAD":0, "TRIP":0}, na_action=None).rename("DC\ok")
 Lost  = DB["ok"].map({"OK":0, "YES":0, "N/A":1, "NO":0}).rename("Lost")
 All_Ok  = DB["ok"].map({"OK":1, "YES":1, "N/A":0, "NO":0}).rename("Passed All")
 Ready = DB["ok"].map({"OK":0, "YES":1, "N/A":0, "NO":0}).rename("Ready")
@@ -48,7 +48,7 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-13:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-15:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
 #MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
@@ -91,9 +91,9 @@ MSU_summary = pd.concat([UM_total, MSU_summary, MSU_total])
 #MSU_summary["Received"][-2:-1] = "Need Leak"
 MSU_summary["Received"][-1:] = "Total"
 
-MSU_summary["LT$_\text{ok}$"] = MSU_summary["MSU"]
+MSU_summary["LT\ok"] = MSU_summary["MSU"]
 
-MSU_summary = MSU_summary[["Received"] + column_names[0:3] + ["LT$_\text{ok}$"] + column_names[3:]]
+MSU_summary = MSU_summary[["Received"] + column_names[0:3] + ["LT\ok"] + column_names[3:]]
 
 MSU_data_file = "Weekly_Presentation/MSU_Tube_Summary_Data.tex"
 

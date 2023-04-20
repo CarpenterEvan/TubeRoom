@@ -127,6 +127,13 @@ def format_database():
     
 
 DB = format_database()
+''' 
+ "tubeID",  "End", "Received", "leakrate", "bend", "flagE",\n 
+ "T1Date", "Length", "Frequency",  "Tension",  "flag", "L",\n
+ "dFrequency", "dTension", "dDays", "flag2",\n
+ "DCday", "sys", "DC", "HVseconds", "DCflag",\n
+ "ENDday",  "done?", "ok", "Comment"
+'''
 
 def locate_tube_row(input_tubeID:str):
     '''Takes in a tube's ID and finds the ID in the tubeID column of the dataframe. 
@@ -161,7 +168,7 @@ def locate_tube_row(input_tubeID:str):
             tubeID = defaults[tubeID]
         # if input doesn't look like a tube ID, and isn't a default value, it's nonsense.
         else: 
-            return -1
+            return -2
         # index of the row with True, which is the only row with the ID
         # "tuberow_index, " unpacks just the first value of the tuple into the variable tuberow 
         # Throws ValueError if ID not found
@@ -485,7 +492,7 @@ def format_values(row:dict):
         DC_total_time = f"{DC_hours:0>2}:{DC_minutes:0>2}:{DC_seconds:0>2}"
 
         DC_pass:bool = DC_passed
-        DC_total_time_colored = white_text(DC_total_time) if (DC_hours>=4) else red_text(DC_total_time)
+        DC_total_time_colored = white_text(DC_total_time) if (DC_hours>=1) else red_text(DC_total_time)
 
     except ValueError:
         
@@ -540,6 +547,7 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
     
     
     error_string = " | ".join([f"{input_tubeID: <8}", 
+                                "----",
                                 "----------", 
                                 "Bend: ----", 
                                 "T1 on -------- ---- ---.---g ----.--mm", 
@@ -547,9 +555,12 @@ def get_formatted_tuple(input_tubeID:str, suppress_colors=False):
                                 "DC on -------- ---.--nA  --:--:--   ---", 
                                 "Final: --- "])
     
+    error_string = f"{input_tubeID: <8}" + "-"*(terminal_width-len(input_tubeID))
     filler_string = "-" * terminal_width
     
     if tuberow == -1:
+        return error_string, {"filler": False}
+    if tuberow == -2:
         return filler_string, {"filler": False}
     else: 
         pass

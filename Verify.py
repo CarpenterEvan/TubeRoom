@@ -246,9 +246,10 @@ def print_summary_dictionary_and_exit():
         exit("\n")
 
 def main(inputs):
+    
     tubeid = inputs
-
-    if tubeid in ["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]:
+    exit_list =["stop", "Stop", "STOP", "quit", "Quit", "QUIT", "exit", "Exit", "EXIT", "sal"]
+    if tubeid in exit_list:
         print_summary_dictionary_and_exit()
     elif tubeid in target_list: 
         tube_caught = True 
@@ -326,7 +327,6 @@ def check_file_for_IDs_with_regex(filename):
 ######################################## Main ########################################
 
 if __name__ == "__main__":
-
     if first_argument=="test":
             test_case()
 
@@ -338,27 +338,36 @@ if __name__ == "__main__":
                 exit("\rDid you press ^D to exit the program? You can type stop, quit, or exit to quit the program next time, or not, I can't stop you.\n")
 
     if CheckFile:
+        print("\tType Mod XX for Modules")
+        print("\tType Summary YYMMDD for Shipment Summary")
         # ls lists out files
         # -1 (not -l) lists them as a column of names
         # *.txt *.csv *.tsv says only list files that end in .txt, .csv, or .tsv
         # | is a pipe, it takes the output from the first function (column of names) 
         #               and puts it into the next function.
         # awk formats the 1st column ($1), adding a \t in front of it
-        os.system(''' ls -1 *.txt *.csv *.tsv| awk '$1="\t"$1' ''')
+        os.system(''' ls -1 *.txt *.csv| awk '$1="\t"$1' ''')
 
-        print("\tor ModXX for Modules")
         file_name = input("File Name: ")
         print(" ")
         newlist = []
-        if "Mod" in file_name:
+        if "Mod " in file_name:
             ID_list = []
-            mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[3:]}")
+            mod_dir = os.path.expanduser(f"~/Google Drive/Shared drives/sMDT Tube Testing Reports/OrderOfTubesInMod/Mod{file_name[-2:]}")
             try:
-                for file in os.scandir(mod_dir):
-                    print(file)
-                    a_file = os.path.join(mod_dir, file.name)
+                for file in sorted(os.listdir(mod_dir)):
+                    a_file = os.path.join(mod_dir, file)
+                    print(a_file)
+                    ID_list += [" ", " ", " ", f"MSU999999 \r[ ML{file[-12]} LY{file[-5]} ]"]
                     ID_list += check_file_for_IDs_with_regex(a_file)
-                    ID_list += [" ", " ", " ", " "]
+            except FileNotFoundError:
+                exit("Sorry, but either that file doesn't exist, or I can't see it from here!")
+
+        elif "Summary " in file_name:
+            ID_list = []
+            Summary_file = os.path.expanduser(f"~/TubeRoom/Summary/Tubes_From_20{file_name[-6:]}.txt")
+            try:
+                ID_list += check_file_for_IDs_with_regex(Summary_file)
             except FileNotFoundError:
                 exit("Sorry, but either that file doesn't exist, or I can't see it from here!")
         elif "Wanted" in file_name:
@@ -366,6 +375,8 @@ if __name__ == "__main__":
                 ID_list = check_file_for_IDs_with_regex("WANTED.txt")
             except FileNotFoundError:
                 exit(f"The prompt 'Wanted' will display the tubes in the file of WANTED.txt.\nDoes that file exist in {__file__}?")
+        elif "stop" in file_name:
+            exit("Ok, exiting now.")
         else: 
             try:
                 with open(file_name, 'r') as the_file:

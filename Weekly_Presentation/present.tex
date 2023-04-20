@@ -9,12 +9,12 @@
 \usepackage{appendixnumberbeamer}
 \usetheme{AnnArbor}
 \usecolortheme{wolverine}
-
+\def\ok{$_\text{ok}$}
 \title{Tube Room Update}
 \author{Evan Carpenter}
 %\date{Mar 7th, 2023}
 \setbeamertemplate{navigation symbols}{}
-% 1,351
+
 \titlegraphic{
    \begin{tikzpicture}[remember picture]
 		\node[xshift=-0.3\pdfpagewidth, yshift=0.021\pdfpageheight]{\includegraphics[width=0.17\linewidth]{atlas.png}};
@@ -28,39 +28,43 @@
 \end{frame}
 \section{Delivery Updates}
 	\begin{frame}
-		\begin{block}{Delivery:}
-			\begin{itemize}
-				\item MSU delivered 1,000 tubes on Mar. 16th. 3 Bent. 
-				\begin{itemize}
-					\item 5 weeks worth of tubes after 5 weeks without delivery.
-				\end{itemize}
-				\item MSU Recieved 1,500 twisters that were requested. 
-				\item Daniel scheduled to deliver this Thursday (March 23rd).
-			\end{itemize}
-		\end{block}	
 		\begin{block}{Tube Testing:}
 			\begin{itemize}
-				\item Mod 39 was delivered to High Bay on Friday, March 10th.
-				\item Mod 40 is ready in Tube Room, I will deliver it this Friday, March 24th.
-				\item Just enough tubes for Mod 41, 42, 43 (50+928).
-				\item Re-tested bad tubes over past week. Some tubes found to pass and be good. 
-				\item Tubes from March 16th shipment still bad. 
+				\item Module 41 is being glued in High Bay.
+				\item Module 42 is ready in Tube Room.
+				\item Enough tubes on hand for Mod 43, 44.
+				\item After Mod 44, $\sim$100 tubes left. 
+				\item Need $\sim$1,800 more tubes from MSU for end of project.
+			\end{itemize}
+		\end{block}
+		\begin{block}{Delivery:}
+			\begin{itemize}
+				\item Last delivery March 31st (300 tubes). 
+				\item Next delivery (confirmed with Daniel) April 20th (Thursday).
 			\end{itemize}
 		\end{block}
 	\end{frame}
-
+\begin{frame}{Delivery this week}
+	\begin{figure}[H]
+		\includegraphics[width=0.75\pdfpagewidth]{MSUTubeProjection.png}
+		\caption{MSU needs 200 tubes this week to stay on requested schedule.}
+	\end{figure}
+	
+\end{frame}
 \section{Tube Room Inventory}	
 		
 		\begin{frame}
 			\begin{figure}
 				\centering
-				\caption*{Status of Database Summary}
+				\caption*{Status of Database Summary. Tubes sent back are indicated in parentheses.}
 				\scalebox{0.6}{\input{MSU_Tube_Summary_Data.tex}}
 			\end{figure}
 			\begin{itemize}
-				\item Mod 39, 40 counted as ``Ready''.
-				\item Enough tubes for Mod 41, 42, 43. 
-				\item $\sim$ 50 tubes left after 43.
+				%2,018 tubes total counting 41, 42
+				\item Mod 41, 42 are counted as ``Ready''.
+				\item Enough tubes on hand for Mod 43, 44.
+				\item After Mod 44, $\sim$100 tubes left.
+				\item Need $\sim$1,800 more tubes for Mod 45-48.
 			\end{itemize}
 				
 
@@ -70,6 +74,7 @@
 			%\frametitle{Tube Room Inventory - UM Tubes}
 			\begin{figure}
 				\includegraphics[width=\linewidth]{/Users/evan/Library/CloudStorage/GoogleDrive-ecarp@umich.edu/Shared drives/sMDT Tube Testing Reports/TubeMadeAtUM/UMdaily2022.png}
+				\caption*{Only 83 more UM tubes left to be put into chamber.}
 			\end{figure}
 		\end{frame}
 \end{document}
