@@ -318,10 +318,12 @@ def test_case():
     main("stop")
     return 0
 
-def check_file_for_IDs_with_regex(filename):
+def check_file_for_IDs_with_regex(filename,mod=False):
     newlist = []
     with open(filename, "r") as the_file:
         newlist += re.findall("MSU[0-9]{5}", the_file.read())#[id.strip() for id in tube_list]
+    if mod:
+        newlist.insert(8,"")
     return newlist
 
 ######################################## Main ########################################
@@ -359,7 +361,7 @@ if __name__ == "__main__":
                     a_file = os.path.join(mod_dir, file)
                     print(a_file)
                     ID_list += [" ", " ", " ", f"MSU999999 \r[ ML{file[-12]} LY{file[-5]} ]"]
-                    ID_list += check_file_for_IDs_with_regex(a_file)
+                    ID_list += check_file_for_IDs_with_regex(a_file,mod=True)
             except FileNotFoundError:
                 exit("Sorry, but either that file doesn't exist, or I can't see it from here!")
 

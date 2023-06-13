@@ -5,9 +5,11 @@
 `conda env create -n TUBEROOM --file TUBEROOM.yml`
 
 # Welcome to the UofM ATLAS Tube Room!!
-## If you're reading this line, then everything here is a work in progress, I don't get paid to write code and documentaton, I get paid to test tubes, this is all done when I have free time, so don't judge! (too much). Ok here is the rest of the file:
+ This was originally written to be documentation of everything I did and learned while working at this job, with the intention of helping out my successor. However, this job won't exist once I leave, so I'm focusing now on just saving information for me to look back on. 
 
-#### Welcome to my documentation of what I have found in my time in the Tube Room. 
+ I don't get paid to write code and documentaton, I get paid to test tubes, this is all done when I have free time, so don't judge! (too much). Ok here is the rest of the file:
+
+
 
 [What you can learn from this](#why)
 
@@ -16,7 +18,7 @@
 [Running Python Files](#why)
 
 
-## <a name="why"> What you can learn from this  </a>
+## <a name="why"> What you can learn from this  
 1.    During my time in the Tube Room, I learned a lot about experimentation, quality assurance, and most importantly, tubes!
 1.    I want to store the things I've learned so the next person that comes after me can have a slightly easer time. 
 1.    I've worked as:  
@@ -36,6 +38,13 @@ Currently there are 4 quality assurance tests we perform on tubes recieved from 
 1.    The test is performed by placing a tube on the L-beam such that the center of the tube is in view of the microscope. 
 1.    Gently rotate the tube (careful that it rotates with 100% slipping, the tube should not be rolling!)
 ###    Tube is Leak Tested (LT)
+0.   The leak detector (Leybold Phoenix Quadro Dry) needs to be calibrated before performing tests. Before being calibrated, it must be running for at least 20 minutes in order to warm up. 
+1.    First 'wet' an o-ring in isopropanol and place it in the brass cap, screw this tightly onto one end of the tube. 
+2.    Stick the brass cap end into the vacuum chamber. 
+3.    Place another 'wet' o-ring on the brass cap attatched to the hose, and screw this on to the other end of the tube. Make sure the big metal/rubber o-ring is on the end of the chamber, that will act as the seal between the hose and the chamber. 
+4.    Seal the hose and the chamber together by attatching the clamp onto the hose valve/o-ring/chamber. 
+5.    Check that all of the black shutoff valves are closed, and press the "START" button on the detector to begin the run. 
+6.    There are three vacuum stages that have different levels of sensitivity towards helium: "GROSS", "FINE", and "ULTRA". Once starting the run, the detector will initially be in the GROSS stage, and after the pressure drops below 2mbar, it will switch to FINE for a few seconds before switching ot ULTRA. Once the vacuum pump is on the ULTRA, open the twist valve connected to the gas regulator, and the shutoff valve connected to the tube. 
 ###    Tube's Tark Turrent is tested (DC)
 ###    The wire of the tube is Tension Tested (TT)
 

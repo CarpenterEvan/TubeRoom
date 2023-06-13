@@ -48,7 +48,7 @@ MSU_tubes = full_df[full_df["MSU"]==True]
 MSU_summary = MSU_tubes.groupby([pd.Grouper(level="Received", freq="W-FRI")]).agg("sum").astype("int") 
 
 # select values of MSU_summary where any value is != 0, take last 8 entries
-MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-15:] 
+MSU_summary = MSU_summary[(MSU_summary != 0).any(1)][-9:] 
 
 # all bent tubes are lost, but not all lost tubes are bent
 #MSU_summary["Lost"] = MSU_summary["Lost"] - MSU_summary["Bent"] 
@@ -112,47 +112,4 @@ msu_string = MSU_summary.to_latex(buf=None, escape=False, column_format = "r|" +
 with open(MSU_data_file, "w") as msufile:
 	msufile.write(msu_string)
 
-#print(msu_string); exit()
-
-exit()
-print(UM_total); exit()
-
-UM_summary = UM_summary[(UM_summary != 0).any(1)]
-
-
-
-
-
-UM_summary["Constructed"] = UM_summary.index.astype(str)
-
-UM_summary = pd.concat([UM_summary, UM_total])
-
-UM_summary["Constructed"][-1:] = "Total"
-
-# Re-ordering the columns 
-UM_summary = UM_summary[UM_column_names]
-
-
-# Get totals for just the subset I chose above (last 8 values)
-
-
-
-UM_data_file = "Weekly_Presentation/UM_Tube_Summary_Data.tex"
-
-um_string= UM_summary.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*len(items_in_summary), index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
-
-UM_summary = UM_summary.reset_index(level=0)
-with open(UM_data_file, "w") as umfile:
-	umfile.write(um_string)
-
-
-both_totals = UM_total.rename(columns={"UM":"MSU"}) + MSU_total
-both_totals = both_totals.rename(columns={"MSU":"Total \# of Tubes"})
-both_totals["Total Number in Tube Room"] = both_totals["Total \# of Tubes"] - both_totals["In Chamber"]# - both_totals["Bent"]- both_totals["Lost"]
-
-both_totals_string = both_totals.to_latex(buf=None, escape=False, column_format = "|c|" + "c|"*(len(items_in_summary)-1) + "p{2.5cm}|", index=False).replace(r"\\", r"\\\hline").replace(r"\toprule", "\hline").replace(r"\midrule", "").replace(r"\bottomrule", "")
-
-totals_data_file = "Weekly_Presentation/Totals_Summary_Data.tex"
-
-with open(totals_data_file, "w") as totalsfile:
-	totalsfile.write(both_totals_string)
+print(msu_string); exit()
